@@ -1,0 +1,7 @@
+tqdm
+numpy
+pandas
+albumentations
+torch>=1.6.0
+torch_optimizer
+pretrainmodels
