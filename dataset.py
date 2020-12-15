@@ -6,9 +6,9 @@ import albumentations
 import torch
 from torch.utils.data import Dataset
 
-dataroot = 'D:/Predict_Wind/train/'
+dataroot = '/home/giang/Desktop/Wind_data/train/'
 
-def get_transforms(image_size):
+def get_transforms(image_size, gray = False):
 
     transforms_train = albumentations.Compose([
         albumentations.Transpose(p=0.5),
@@ -30,42 +30,58 @@ def get_transforms(image_size):
         ], p=0.7),
 
         albumentations.CLAHE(clip_limit=4.0, p=0.7),
-        albumentations.HueSaturationValue(hue_shift_limit=10, sat_shift_limit=20, val_shift_limit=10, p=0.5),
         albumentations.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=15, border_mode=0, p=0.85),
         albumentations.Resize(image_size, image_size),
-        albumentations.Cutout(max_h_size=int(image_size * 0.375), max_w_size=int(image_size * 0.375), num_holes=1, p=0.7),
-        albumentations.Normalize()
+        albumentations.Cutout(max_h_size=int(image_size * 0.375), max_w_size=int(image_size * 0.375), num_holes=1, p=0.7)
     ])
 
     transforms_val = albumentations.Compose([
-        albumentations.Resize(image_size, image_size),
-        albumentations.Normalize()
+        albumentations.Resize(image_size, image_size)
+        
     ])
+
+    if not gray:
+        transforms_train = albumentations.Compose([
+            transforms_train,
+            albumentations.HueSaturationValue(hue_shift_limit=10, sat_shift_limit=20, val_shift_limit=10, p=0.5),
+            albumentations.Normalize()
+        ])
+        transforms_val = albumentations.Compose([
+            transforms_val,
+            albumentations.Normalize()
+        ])
 
     return transforms_train, transforms_val
 
 class WindDataset(Dataset):
-    def __init__(self, image_list, target, test, transform = None):
+    def __init__(self, image_list, target, test, transform = None, gray = False):
         self.image_list = image_list
         self.target = target
         self.test = test
         self.transform = transform
-    
+        self.gray = gray
     def __len__(self):
         return len(self.image_list)
         # return 20
     
     def __getitem__(self, i):
-        image = cv2.imread(dataroot + self.image_list[i] + '.jpg')
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        if not self.gray:
+            image = cv2.imread(dataroot + self.image_list[i] + '.jpg')
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        else:
+            image = cv2.imread(dataroot + self.image_list[i] + '.jpg', 0)
 
         if self.transform:
             image = self.transform(image=image)['image'].astype(np.float32)
         else:
             image = image.astype(np.float32)
+
+        if self.gray:
+            image = np.expand_dims(image, axis = 2)
+            image/=255.
         image = torch.tensor(image).float()
         image = image.permute(2,0,1)
         if self.test:
             return image
-        return image, torch.tensor(self.target[i]).long()
+        return image, torch.tensor(self.target[i]).float()
 
