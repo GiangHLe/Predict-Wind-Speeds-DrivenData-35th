@@ -2,6 +2,28 @@ import torch
 import torch.nn as nn
 import pretrainedmodels
 from utils import init_weights
+from torchvision.models import resnet50
+
+sigmoid = nn.Sigmoid()
+
+
+class Swish(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, i):
+        result = i * sigmoid(i)
+        ctx.save_for_backward(i)
+        return result
+    @staticmethod
+    def backward(ctx, grad_output):
+        i = ctx.saved_variables[0]
+        sigmoid_i = sigmoid(i)
+        return grad_output * (sigmoid_i * (1 + i * (1 - sigmoid_i)))
+
+
+class Swish_Module(nn.Module):
+    def forward(self, x):
+        return Swish.apply(x)
+
 
 class Seresnet_Wind(nn.Module):
     def __init__(self, type = 1, out_dim = 1, pretrained = True, gray = False):
@@ -11,32 +33,49 @@ class Seresnet_Wind(nn.Module):
         else:
             name = "se_resnext101_32x4d"
         if pretrained:
-            self.model_body = nn.Sequential(
+            self.extract = nn.Sequential(
                 *list(pretrainedmodels.__dict__[name](num_classes=1000, pretrained="imagenet").children())[
                     :-2
                 ]
             )
         else:
-            self.model_body = nn.Sequential(
+            self.extract = nn.Sequential(
             *list(pretrainedmodels.__dict__[name](num_classes=1000, pretrained=None).children())[
                 :-2
             ]
         )
         if gray:
-            # print(self.model_body)
-            self.model_body[0].conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+            self.extract[0].conv1.inchannels = 1
         self.avg_pool = nn.AdaptiveAvgPool2d((1,1))
-        # self.fea_bn = nn.BatchNorm1d(2048)
-        # self.fea_bn.bias.requires_grad_(False)
-        self.head = nn.Linear(2048, out_dim)
+        self.head = nn.Sequential(
+            nn.Linear(2048, 1024),
+            Swish_Module(),
+            nn.Linear(1024, 512),
+            Swish_Module(),
+            nn.Linear(512, 256),
+            Swish_Module(),
+            nn.Linear(256, out_dim)
+        )
         if not pretrained:
-            self.model_body.apply(init_weights)
+            self.extract.apply(init_weights)
             self.head.apply(init_weights)
 
     def forward(self, x):
-        x = self.model_body(x)
+        x = self.extract(x)
         x = self.avg_pool(x)
         x = x.view(x.size(0), -1)
         # x = self.fea_bn(x)
         out = self.head(x)
         return out
+
+class ResNet(nn.Module):
+    def __init__(self, gray):
+        super(CustomModels, self).__init__()
+        self.extract = nn.Sequential(
+                    *list(models.__dict__["resnet50"](num_classes=1000, pretrained=None).children())[
+                        :-1
+                    ]
+                )
+        if gray:
+            self.extract[0].in_channels = 1
+        
