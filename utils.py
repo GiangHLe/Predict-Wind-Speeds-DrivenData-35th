@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 import numpy as np
+import time
 
 def train_epoch(model, loader, optimizer, criterion, device):
 
@@ -11,16 +12,17 @@ def train_epoch(model, loader, optimizer, criterion, device):
     running_loss = 0
     optimizer.zero_grad()
     for i, (image, target) in enumerate(bar):
+        optimizer.zero_grad()
         image, target = image.to(device), target.to(device)
         b_size = image.size()[0]
-        output = model(image)        
+        output = model(image)                
         loss = criterion(output, target)
         loss.backward()
         loss_np = loss.item()
         train_loss.append(loss_np)
-        if i%4==0:
-            optimizer.step()
-            optimizer.zero_grad()
+        # if i%4==0:
+        optimizer.step()
+        # optimizer.zero_grad()
         bar.set_description('loss: %.5f' % (loss_np))
     train_loss = np.mean(train_loss)
     print('running loss: %.5f' % (train_loss))
@@ -34,10 +36,14 @@ def val_epoch(model, loader, criterion, device):
     bar = tqdm(loader)
     with torch.no_grad():
         for (image,target) in bar:
+
             image, target = image.to(device), target.to(device)
             num_sample += image.size()[0]
             output = model(image).detach().cpu().numpy()
+            print(output)
             target = target.detach().cpu().numpy()
+            print('='*10)
+            print(target)
             RMSE += np.sum((output - target)**2)
         RMSE/=num_sample
         print('RMSE: %.5f' % (RMSE))

@@ -45,14 +45,18 @@ class Seresnet_Wind(nn.Module):
             ]
         )
         if gray:
-            self.extract[0].conv1.inchannels = 1
+            # print(self.extract[0].conv1)
+            self.extract[0].conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
         self.avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.head = nn.Sequential(
             nn.Linear(2048, 1024),
+            nn.Dropout(p = 0.5),
             Swish_Module(),
             nn.Linear(1024, 512),
+            nn.Dropout(p = 0.5),
             Swish_Module(),
             nn.Linear(512, 256),
+            nn.Dropout(p = 0.5),
             Swish_Module(),
             nn.Linear(256, out_dim)
         )
@@ -88,8 +92,8 @@ class ResNet_Wind_LSTM(nn.Module):
             Swish_Module(),
             nn.Linear(512, 128),
             Swish_Module(),
-            nn.LSTM(128,128)
-            nn.Linear(128, 1),
+            nn.LSTM(128,128),
+            nn.Linear(128, 1)
         )
         if gray:
             self.extract[0].in_channels = 1

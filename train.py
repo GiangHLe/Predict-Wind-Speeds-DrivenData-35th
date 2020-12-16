@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 # import torch.optim as optim
 import torch_optimizer as optim
-from torch.optim import lr_scheduler
+from torch.optim import lr_scheduler, Adam, SGD
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
 from dataset import get_transforms, WindDataset
 from models import Seresnet_Wind
@@ -24,13 +24,9 @@ class Hparameter(object):
     def __init__(self):
         self.batch_size = 16
         self.lr = 1e-3
-        self.num_workers = 8
+        self.num_workers = 0
         self.num_epochs = 100
-<<<<<<< HEAD
         self.image_size = 640
-=======
-        self.image_size = 224
->>>>>>> 54ef39e3d23c81d2f33decc95c1121e36fa817f6
         self.save_path = './weights/serenext_rgb_accgrad/'
 
 if __name__ == "__main__":
@@ -57,37 +53,42 @@ if __name__ == "__main__":
         target = y_val,
         test = False, 
         transform=transforms_val,
-        gray = True
+        gray = True,
+        a = True
         )
     train_loader = torch.utils.data.DataLoader(
         dataset_train, 
         batch_size=args.batch_size, 
-        sampler=RandomSampler(dataset_train), 
+        # sampler=RandomSampler(dataset_train), 
+        shuffle = True,
         num_workers=args.num_workers
         )
     valid_loader = torch.utils.data.DataLoader(
         dataset_valid,
         batch_size=args.batch_size, 
-        num_workers=args.num_workers
+        num_workers=args.num_workers,
+        shuffle=False
         )
 
     model = Seresnet_Wind(type = 1, pretrained= False, gray = True)
-    model = ResNet_Wind_LSTM(pretrained = False, gray = True)
+    # model = ResNet_Wind_LSTM(pretrained = False, gray = True)
     model.to(device)
 
 
     real_batch = 64
-    acc_scale = args.batch_size / 64
+    acc_scale = args.batch_size / real_batch
     # acc_scale = 
-    real_lr = args.lr*acc_scale
+    real_lr = args.lr*acc_scale/10
 
-    optimizer = optim.RAdam(
-        model.parameters(),
-        lr= real_lr,
-        betas=(0.9, 0.999),
-        eps=1e-8,
-        weight_decay=0,
-    )
+    # optimizer = optim.RAdam(
+    #     model.parameters(),
+    #     lr= real_lr,
+    #     betas=(0.9, 0.999),
+    #     eps=1e-8,
+    #     weight_decay=0,
+    # )
+    optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
+
 
     criterion = nn.MSELoss()
     best_rmse = 12.
@@ -95,7 +96,9 @@ if __name__ == "__main__":
     train_loss_overall = []
 
     for epoch in range(args.num_epochs):
+        model.train()
         train_loss = train_epoch(model, train_loader, optimizer, criterion, device)
+        model.eval()
         RMSE = val_epoch(model, valid_loader, criterion, device)
         rmse.append(RMSE)
         train_loss_overall.append(train_loss)

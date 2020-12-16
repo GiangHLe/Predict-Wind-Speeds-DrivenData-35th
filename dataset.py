@@ -54,15 +54,18 @@ def get_transforms(image_size, gray = False):
     return transforms_train, transforms_val
 
 class WindDataset(Dataset):
-    def __init__(self, image_list, target, test, transform = None, gray = False):
+    def __init__(self, image_list, target, test, transform = None, gray = False, a = False):
         self.image_list = image_list
         self.target = target
         self.test = test
         self.transform = transform
         self.gray = gray
+        self.a = a
     def __len__(self):
-        return len(self.image_list)
-        # return 20
+        if not self.a:        
+            return len(self.image_list)
+        else:
+            return 100
     
     def __getitem__(self, i):
         if not self.gray:
