@@ -23,7 +23,7 @@ def train_epoch(model, loader, optimizer, criterion, device):
             optimizer.zero_grad()
         bar.set_description('loss: %.5f' % (loss_np))
     train_loss = np.mean(train_loss)
-    bar.set_description('running loss: %.5f' % (train_loss))
+    print('running loss: %.5f' % (train_loss))
     return train_loss
 
 def val_epoch(model, loader, criterion, device):
@@ -40,12 +40,12 @@ def val_epoch(model, loader, criterion, device):
             target = target.detach().cpu().numpy()
             RMSE += np.sum((output - target)**2)
         RMSE/=num_sample
-        bar.set_description('RMSE: %.5f' % (RMSE))
+        print('RMSE: %.5f' % (RMSE))
     return RMSE
 
 def init_weights(m):
     if isinstance(m, nn.Linear):
-        torch.nn.init.xavier_normal_(m.weight)
+        torch.nn.init.kaiming_normal_(m.weight)
         m.bias.data.fill_(0.01)
     elif isinstance(m, nn.Conv2d):
         torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
