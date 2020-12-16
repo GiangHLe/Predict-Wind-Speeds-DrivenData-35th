@@ -26,7 +26,7 @@ class Hparameter(object):
         self.lr = 1e-3
         self.num_workers = 0
         self.num_epochs = 100
-        self.image_size = 640
+        self.image_size = 224
         self.save_path = './weights/serenext_rgb_accgrad/'
 
 if __name__ == "__main__":
@@ -70,8 +70,8 @@ if __name__ == "__main__":
         shuffle=False
         )
 
-    model = Seresnet_Wind(type = 1, pretrained= False, gray = True)
-    # model = ResNet_Wind_LSTM(pretrained = False, gray = True)
+    # model = Seresnet_Wind(type = 1, pretrained= False, gray = True)
+    model = ResNet_Wind_LSTM(pretrained = False, gray = True)
     model.to(device)
 
 

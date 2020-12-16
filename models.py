@@ -89,8 +89,10 @@ class ResNet_Wind_LSTM(nn.Module):
                 )
         self.head = nn.Sequential(
             nn.Linear(2048, 512),
+            nn.Dropout(p = 0.5),
             Swish_Module(),
             nn.Linear(512, 128),
+            nn.Dropout(p = 0.5),
             Swish_Module(),
             nn.LSTM(128,128),
             nn.Linear(128, 1)
