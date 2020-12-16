@@ -68,14 +68,34 @@ class Seresnet_Wind(nn.Module):
         out = self.head(x)
         return out
 
-class ResNet(nn.Module):
-    def __init__(self, gray):
+class ResNet_Wind_LSTM(nn.Module):
+    def __init__(self, gray, pretrained):
         super(CustomModels, self).__init__()
-        self.extract = nn.Sequential(
+        if pretrained:
+            self.extract = nn.Sequential(
+                    *list(models.__dict__["resnet50"](num_classes=1000, pretrained='imagenet').children())[
+                        :-1
+                    ]
+                )
+        else:
+            self.extract = nn.Sequential(
                     *list(models.__dict__["resnet50"](num_classes=1000, pretrained=None).children())[
                         :-1
                     ]
                 )
+        self.head = nn.Sequential(
+            nn.Linear(2048, 512),
+            Swish_Module(),
+            nn.Linear(512, 128),
+            Swish_Module(),
+            nn.LSTM(128,128)
+            nn.Linear(128, 1),
+        )
         if gray:
             self.extract[0].in_channels = 1
+    def forward(self, x):
+        x = self.extract(x)
+        out = self.head(x)
+        return out
+
         
