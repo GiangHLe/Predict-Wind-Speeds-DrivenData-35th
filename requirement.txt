@@ -1,4 +1,5 @@
 tqdm
+opencv-python==4.0.1.23
 numpy
 pandas
 albumentations
