@@ -26,7 +26,7 @@ class Hparameter(object):
         self.lr = 1e-3
         self.num_workers = 8
         self.num_epochs = 100
-        self.image_size = 640
+        self.image_size = 384
         self.save_path = './weights/serenext_rgb_accgrad/'
 
 if __name__ == "__main__":
@@ -72,8 +72,8 @@ if __name__ == "__main__":
 
 
     real_batch = 64
-    # acc_scale = args.batch_size / 64
-    acc_scale = 4
+    acc_scale = args.batch_size / 64
+    # acc_scale = 
     real_lr = args.lr*acc_scale
 
     optimizer = optim.RAdam(
