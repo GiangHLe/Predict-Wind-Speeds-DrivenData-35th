@@ -22,11 +22,11 @@ from utils import train_epoch, val_epoch
 
 class Hparameter(object):
     def __init__(self):
-        self.batch_size = 16
+        self.batch_size = 46
         self.lr = 1e-3
         self.num_workers = 0
         self.num_epochs = 100
-        self.image_size = 224
+        self.image_size = 384
         self.save_path = './weights/serenext_rgb_accgrad/'
 
 if __name__ == "__main__":
@@ -70,24 +70,24 @@ if __name__ == "__main__":
         shuffle=False
         )
 
-    # model = Seresnet_Wind(type = 1, pretrained= False, gray = True)
-    model = ResNet_Wind_LSTM(pretrained = False, gray = True)
+    model = Seresnet_Wind(type = 1, pretrained= False, gray = True)
+    # model = ResNet_Wind_LSTM(pretrained = False, gray = True)
     model.to(device)
 
 
     real_batch = 64
-    acc_scale = args.batch_size / real_batch
-    # acc_scale = 
-    real_lr = args.lr*acc_scale/10
+    # acc_scale = args.batch_size / real_batch
+    acc_scale = 1
+    real_lr = args.lr*acc_scale
 
-    # optimizer = optim.RAdam(
-    #     model.parameters(),
-    #     lr= real_lr,
-    #     betas=(0.9, 0.999),
-    #     eps=1e-8,
-    #     weight_decay=0,
-    # )
-    optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
+    optimizer = optim.RAdam(
+        model.parameters(),
+        lr= real_lr,
+        betas=(0.9, 0.999),
+        eps=1e-8,
+        weight_decay=0,
+    )
+    # optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
 
 
     criterion = nn.MSELoss()
