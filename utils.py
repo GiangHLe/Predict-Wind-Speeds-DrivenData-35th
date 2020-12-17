@@ -87,11 +87,8 @@ def val_epoch(model, loader, criterion, device, max_value):
             num_sample += image.size()[0]
             output = model(image).detach().cpu().numpy()
             output*=max_value
-            # print(output)
             target = target.detach().cpu().numpy()
             target*=max_value
-            # print('='*10)
-            # print(target)
             RMSE += np.sum((output - target)**2)
         RMSE/=num_sample
         print('RMSE: %.5f' % (RMSE))
