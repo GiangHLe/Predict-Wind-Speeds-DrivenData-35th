@@ -22,18 +22,18 @@ from utils import train_epoch, val_epoch
 
 class Hparameter(object):
     def __init__(self):
-        self.batch_size = 46
-        self.lr = 1e-3
-        self.num_workers = 0
+        self.batch_size = 16
+        self.lr = 1e-5
+        self.num_workers = 8
         self.num_epochs = 100
-        self.image_size = 384
+        self.image_size = 224
         self.save_path = './weights/serenext_rgb_accgrad/'
 
 if __name__ == "__main__":
     args = Hparameter()
     device = torch.device('cuda')
 
-    df = pd.read_csv('/home/giang/Desktop/Wind_data/training_set_labels.csv')
+    df = pd.read_csv('./data/training_set_labels.csv')
     image_id = df.image_id.to_list()
     target = df.wind_speed.to_list()
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         dataset_train, 
         batch_size=args.batch_size, 
         # sampler=RandomSampler(dataset_train), 
-        shuffle = True,
+        shuffle = False,
         num_workers=args.num_workers
         )
     valid_loader = torch.utils.data.DataLoader(
@@ -80,14 +80,14 @@ if __name__ == "__main__":
     acc_scale = 1
     real_lr = args.lr*acc_scale
 
-    optimizer = optim.RAdam(
-        model.parameters(),
-        lr= real_lr,
-        betas=(0.9, 0.999),
-        eps=1e-8,
-        weight_decay=0,
-    )
-    # optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
+    # optimizer = optim.RAdam(
+    #     model.parameters(),
+    #     lr= real_lr,
+    #     betas=(0.9, 0.999),
+    #     eps=1e-8,
+    #     weight_decay=0,
+    # )
+    optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
 
 
     criterion = nn.MSELoss()

@@ -6,7 +6,8 @@ import albumentations
 import torch
 from torch.utils.data import Dataset
 
-dataroot = '/home/giang/Desktop/Wind_data/train/'
+# dataroot = '/home/giang/Desktop/Wind_data/train/'
+dataroot = 'C:/Users/Admin/Desktop/Wind_data/train/'
 
 def get_transforms(image_size, gray = False):
 
@@ -73,7 +74,7 @@ class WindDataset(Dataset):
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         else:
             image = cv2.imread(dataroot + self.image_list[i] + '.jpg', 0)
-
+        # print(self.image_list[i])
         if self.transform:
             image = self.transform(image=image)['image'].astype(np.float32)
         else:

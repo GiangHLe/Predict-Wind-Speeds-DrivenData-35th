@@ -99,9 +99,15 @@ class ResNet_Wind_LSTM(nn.Module):
         )
         if gray:
             self.extract[0].in_channels = 1
+        if not pretrained:
+            print('Init weight...')
+            self.extract.apply(init_weights)
+            self.head.apply(init_weights)
     def forward(self, x):
         x = self.extract(x)
         out = self.head(x)
         return out
+    
+
 
         
