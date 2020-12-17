@@ -49,21 +49,28 @@ class Seresnet_Wind(nn.Module):
             self.extract[0].conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
         self.avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.head = nn.Sequential(
-            nn.Linear(2048, 1024),
+            nn.Linear(2048, 512),
+            nn.Dropout(p = 0.4),
+            nn.LeakyReLU(),
+            nn.BatchNorm1d(512),
+            nn.Linear(512, 128),
+            nn.Dropout(p = 0.4),
+            nn.LeakyReLU(),
+            nn.BatchNorm1d(128),
+            nn.Linear(128, 32),
             nn.Dropout(p = 0.5),
-            Swish_Module(),
-            nn.Linear(1024, 512),
-            nn.Dropout(p = 0.5),
-            Swish_Module(),
-            nn.Linear(512, 256),
-            nn.Dropout(p = 0.5),
-            Swish_Module(),
-            nn.Linear(256, out_dim)
+            nn.LeakyReLU(),
+            nn.BatchNorm1d(32),
+            nn.Linear(32, out_dim)
         )
+        # self.fea_bn = nn.BatchNorm1d(2048)
+        # self.fea_bn.bias.requires_grad_(False)
+
         if not pretrained:
             self.extract.apply(init_weights)
             self.head.apply(init_weights)
-
+            # self.fea_bn.apply(init_weights)
+    
     def forward(self, x):
         x = self.extract(x)
         x = self.avg_pool(x)
@@ -109,5 +116,31 @@ class ResNet_Wind_LSTM(nn.Module):
         return out
     
 
-
-        
+class SimpleModel(nn.Module):
+    def __init__(self):
+        super(SimpleModel, self).__init__()
+        self.extract = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(32),
+            nn.Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(64),
+            nn.Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(128),
+            nn.AdaptiveAvgPool2d((1,1)),
+        )
+        self.head = nn.Sequential(
+            nn.Linear(128, 32),
+            nn.Dropout(p = 0.2),
+            nn.LeakyReLU(),
+            nn.BatchNorm1d(32),
+            nn.Linear(32, 1),
+            nn.ReLU()            
+        )
+    def forward(self, x):
+        x = self.extract(x)
+        x = x.view(x.size(0), -1)
+        out = self.head(x)
+        return out

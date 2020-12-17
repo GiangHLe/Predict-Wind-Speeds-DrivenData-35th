@@ -12,7 +12,7 @@ import torch_optimizer as optim
 from torch.optim import lr_scheduler, Adam, SGD
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
 from dataset import get_transforms, WindDataset
-from models import Seresnet_Wind
+from models import Seresnet_Wind, SimpleModel
 from sklearn.model_selection import train_test_split
 
 import pickle
@@ -22,10 +22,11 @@ from utils import train_epoch, val_epoch
 
 class Hparameter(object):
     def __init__(self):
-        self.batch_size = 16
-        self.lr = 1e-5
+        self.batch_size = 256
+        self.lr = 1e-2
         self.num_workers = 8
         self.num_epochs = 100
+        # self.image_size = 368
         self.image_size = 224
         self.save_path = './weights/serenext_rgb_accgrad/'
 
@@ -34,8 +35,12 @@ if __name__ == "__main__":
     device = torch.device('cuda')
 
     df = pd.read_csv('./data/training_set_labels.csv')
+    target = np.array(df.wind_speed).astype(np.float32)
+    max_wind = np.amax(target)
+    # print(max_wind)
+    target = list(target / max_wind)
     image_id = df.image_id.to_list()
-    target = df.wind_speed.to_list()
+    # target = df.wind_speed.to_list()
 
     train, val, y_train, y_val = train_test_split(image_id, target, test_size = 0.2, random_state = 42, shuffle = True)
 
@@ -65,12 +70,17 @@ if __name__ == "__main__":
         )
     valid_loader = torch.utils.data.DataLoader(
         dataset_valid,
-        batch_size=args.batch_size, 
+        batch_size=args.batch_size*2, 
         num_workers=args.num_workers,
         shuffle=False
         )
 
-    model = Seresnet_Wind(type = 1, pretrained= False, gray = True)
+    # model = Seresnet_Wind(type = 1, pretrained= False, gray = True)
+    model = SimpleModel()
+    print(model)
+    # path = './weights/serenext_rgb_accgrad/epoch_2_29197.89750.pth'
+    # model.load_state_dict(torch.load(path))
+
     # model = ResNet_Wind_LSTM(pretrained = False, gray = True)
     model.to(device)
 
@@ -89,7 +99,6 @@ if __name__ == "__main__":
     # )
     optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
 
-
     criterion = nn.MSELoss()
     best_rmse = 12.
     rmse = []
@@ -97,9 +106,11 @@ if __name__ == "__main__":
 
     for epoch in range(args.num_epochs):
         model.train()
+        torch.cuda.synchronize()
         train_loss = train_epoch(model, train_loader, optimizer, criterion, device)
         model.eval()
-        RMSE = val_epoch(model, valid_loader, criterion, device)
+        torch.cuda.synchronize()
+        RMSE = val_epoch(model, valid_loader, criterion, device, max_wind)
         rmse.append(RMSE)
         train_loss_overall.append(train_loss)
         pick = {'train': train_loss_overall, 'val':rmse}

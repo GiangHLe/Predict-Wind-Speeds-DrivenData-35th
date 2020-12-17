@@ -6,8 +6,8 @@ import albumentations
 import torch
 from torch.utils.data import Dataset
 
-# dataroot = '/home/giang/Desktop/Wind_data/train/'
-dataroot = 'C:/Users/Admin/Desktop/Wind_data/train/'
+dataroot = '/home/giang/Desktop/Wind_data/train/'
+# dataroot = 'C:/Users/Admin/Desktop/Wind_data/train/'
 
 def get_transforms(image_size, gray = False):
 
@@ -66,8 +66,10 @@ class WindDataset(Dataset):
         if not self.a:        
             return len(self.image_list)
         else:
-            return 100
-    
+            return 1000
+        # return len(self.image_list)
+        # return 1024
+
     def __getitem__(self, i):
         if not self.gray:
             image = cv2.imread(dataroot + self.image_list[i] + '.jpg')
@@ -79,6 +81,7 @@ class WindDataset(Dataset):
             image = self.transform(image=image)['image'].astype(np.float32)
         else:
             image = image.astype(np.float32)
+        # image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_AREA).astype(np.float32)
 
         if self.gray:
             image = np.expand_dims(image, axis = 2)
