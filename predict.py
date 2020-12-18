@@ -27,7 +27,7 @@ test_loader = DataLoader(
         num_workers = 12
         )
 
-weights_path = './weights/serenext_rgb_accgrad/epoch_14_13.19955.pth'
+weights_path = './weights/resnet50-full-Switch/epoch_7_4.55150.pth'
 model = ResNetFromExample()
 model.load_state_dict(torch.load(weights_path))
 model.to(device)
@@ -45,6 +45,6 @@ with torch.no_grad():
         output = model(image).detach().cpu().numpy()
         result = np.concatenate((result, output), axis = 0)
 
-result = list((np.round(result)).astype(np.int32).faltten())
+result = list((np.round(result)).astype(np.int32).flatten())
 df.wind_speed = result
-df.to_csv('sub1.csv', index = False)
+df.to_csv('./sub2.csv', index = False)

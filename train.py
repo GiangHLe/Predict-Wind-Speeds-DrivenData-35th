@@ -25,7 +25,7 @@ class Hparameter(object):
         self.batch_size = 256
         self.lr = 2e-4
         self.num_workers = 8
-        self.num_epochs = 50
+        self.num_epochs = 18
         # self.image_size = 368
         self.image_size = 224
         self.save_path = './weights/resnet50-full-Switch/'
@@ -87,8 +87,8 @@ if __name__ == "__main__":
     # model = SimpleModel()
     model = ResNetFromExample()
     # print(model)
-    # path = './weights/serenext_rgb_accgrad/epoch_2_29197.89750.pth'
-    # model.load_state_dict(torch.load(path))
+    path = './weights/resnet50-full-Switch/epoch_12_4.72883.pth'
+    model.load_state_dict(torch.load(path))
 
     # model = ResNet_Wind_LSTM(pretrained = False, gray = True)
     model.to(device)
@@ -113,6 +113,7 @@ if __name__ == "__main__":
     best_rmse = 30.
     rmse = []
     train_loss_overall = []
+    last_epoch = 12
 
     for epoch in range(args.num_epochs):
         model.train()
@@ -128,7 +129,7 @@ if __name__ == "__main__":
         with open('./plot.pkl', 'wb') as f:
             pickle.dump(pick, f)
         # if RMSE < best_rmse or epoch%10 == 0:
-        name = args.save_path + 'epoch_%d_%.5f.pth'%(epoch, RMSE)
+        name = args.save_path + 'epoch_%d_%.5f.pth'%(epoch + last_epoch + 1, RMSE)
         # best_rmse = RMSE
         print('Saving model...')
         torch.save(model.state_dict(), name)
