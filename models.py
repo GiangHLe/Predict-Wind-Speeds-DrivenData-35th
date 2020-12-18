@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import pretrainedmodels
 from utils import init_weights
-from torchvision.models import resnet50
+from torchvision import models
 
 sigmoid = nn.Sigmoid()
 
@@ -81,7 +81,7 @@ class Seresnet_Wind(nn.Module):
 
 class ResNet_Wind_LSTM(nn.Module):
     def __init__(self, gray, pretrained):
-        super(CustomModels, self).__init__()
+        super(ResNet_Wind_LSTM, self).__init__()
         if pretrained:
             self.extract = nn.Sequential(
                     *list(models.__dict__["resnet50"](num_classes=1000, pretrained='imagenet').children())[
@@ -115,6 +115,33 @@ class ResNet_Wind_LSTM(nn.Module):
         out = self.head(x)
         return out
     
+
+class ResNetFromExample(nn.Module):
+    def __init__(self, pretrained = True):
+        super(ResNetFromExample, self).__init__()
+        if pretrained:
+            self.extract = nn.Sequential(
+                    *list(models.__dict__["resnet50"](num_classes=1000, pretrained='imagenet').children())[
+                        :-1
+                    ]
+                )
+        else:
+            self.extract = nn.Sequential(
+                    *list(models.__dict__["resnet50"](num_classes=1000, pretrained=None).children())[
+                        :-1
+                    ]
+                )
+        self.head = nn.Sequential(
+            nn.Linear(2048, 50),
+            nn.Dropout(p = 0.1),
+            nn.ReLU(),
+            nn.Linear(50, 1),
+        )
+    def forward(self, x):
+        x = self.extract(x)
+        x = x.view(x.size(0), -1)
+        out = self.head(x)
+        return out
 
 class SimpleModel(nn.Module):
     def __init__(self):
