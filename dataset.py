@@ -7,6 +7,7 @@ import torch
 from torch.utils.data import Dataset
 
 dataroot = '/home/giang/Desktop/Wind_data/train/'
+# dataroot = '/home/giang/Desktop/Wind_data/test/'
 # dataroot = 'C:/Users/Admin/Desktop/Wind_data/train/'
 
 def get_transforms(image_size, gray = False):
@@ -54,21 +55,28 @@ def get_transforms(image_size, gray = False):
 
     return transforms_train, transforms_val
 
+temp_transform = albumentations.Compose([
+            albumentations.Resize(224, 224),
+            albumentations.Normalize()
+        ])
+
+
 class WindDataset(Dataset):
-    def __init__(self, image_list, target, test, transform = None, gray = False, a = False):
+    def __init__(self, image_list, target = None, test = False, transform = None, gray = False, a = False):
         self.image_list = image_list
         self.target = target
         self.test = test
-        self.transform = transform
+        # self.transform = transform
+        self.transform = temp_transform
         self.gray = gray
-        self.a = a
+        # self.a = a
     def __len__(self):
-        if not self.a:        
-            return len(self.image_list)
-        else:
-            return 1000
-        # return len(self.image_list)
-        # return 1024
+        # if not self.a:        
+        #     return len(self.image_list)
+        # else:
+        #     return 1000
+        return len(self.image_list)
+        # return 2048
 
     def __getitem__(self, i):
         if not self.gray:
@@ -81,7 +89,7 @@ class WindDataset(Dataset):
             image = self.transform(image=image)['image'].astype(np.float32)
         else:
             image = image.astype(np.float32)
-        # image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_AREA).astype(np.float32)
+        # image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA).astype(np.float32)
 
         if self.gray:
             image = np.expand_dims(image, axis = 2)
@@ -92,3 +100,9 @@ class WindDataset(Dataset):
             return image
         return image, torch.tensor(self.target[i]).float()
 
+def process_submiss(path):
+    image = cv2.imread(path)
+    image = temp_transform(image = image)['image'].astype(np.float32)
+    # image = torch.tensor(image).float()
+    # image = image.permute(2,0,1)
+    return image
