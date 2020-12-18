@@ -26,13 +26,13 @@ def train_epoch(model, loader, optimizer, criterion, device):
         train_loss.append(loss_np)
         # print(temp)
         # if i%4==0:
-        temp1 = output.detach().cpu().numpy() * 185.
-        temp2 = target.detach().cpu().numpy() * 185.
+        temp1 = output.detach().cpu().numpy()# * 185.
+        temp2 = target.detach().cpu().numpy()# * 185.
         temp2 = np.expand_dims(temp2, axis = 1)
         temp = np.concatenate((temp1,temp2), axis = 1)
         print(temp)
 
-        # bar.set_description('loss: %.5f' % (loss_np))
+        bar.set_description('loss: %.5f' % (loss_np))
     
     # debug
     # previous = model.head[12].weight.clone()
@@ -82,7 +82,6 @@ def val_epoch(model, loader, criterion, device, max_value):
     bar = tqdm(loader)
     with torch.no_grad():
         for (image,target) in bar:
-
             image, target = image.to(device), target.to(device)
             num_sample += image.size()[0]
             output = model(image).detach().cpu().numpy()
@@ -90,6 +89,7 @@ def val_epoch(model, loader, criterion, device, max_value):
             target = target.detach().cpu().numpy()
             target*=max_value
             RMSE += np.sum((output - target)**2)
+        RMSE = np.sqrt(RMSE)
         RMSE/=num_sample
         print('RMSE: %.5f' % (RMSE))
     return RMSE
@@ -103,3 +103,10 @@ def init_weights(m):
     elif isinstance(m, nn.BatchNorm2d):
         m.reset_parameters()
     
+class RMSELoss(nn.Module):
+    def __init__(self):
+        super(RMSELoss, self).__init__()
+        self.mse = nn.MSELoss()
+
+    def forward(self, output, target):
+        return torch.sqrt(self.mse(output, target))
