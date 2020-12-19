@@ -74,20 +74,22 @@ if __name__ == "__main__":
         batch_size=args.batch_size, 
         # sampler=RandomSampler(dataset_train), 
         shuffle = False,
-        num_workers=args.num_workers
+        num_workers=args.num_workers,
+        drop_last=True
         )
     valid_loader = torch.utils.data.DataLoader(
         dataset_valid,
-        batch_size=args.batch_size*2, 
+        batch_size=args.batch_size, 
         num_workers=args.num_workers,
-        shuffle=False
+        shuffle=False,
+        drop_last=True
         )
 
     # model = Seresnet_Wind(type = 1, pretrained= False, gray = True)
     # model = SimpleModel()
     model = ResNetFromExample()
     # print(model)
-    path = './weights/resnet50-full-Switch/epoch_12_4.72883.pth'
+    path = './weights/resnet50-full-Switch/epoch_17_4.67716.pth'
     model.load_state_dict(torch.load(path))
 
     # model = ResNet_Wind_LSTM(pretrained = False, gray = True)
@@ -99,21 +101,21 @@ if __name__ == "__main__":
     # acc_scale = 1
     # real_lr = args.lr*acc_scale
 
-    optimizer = optim.RAdam(
-        model.parameters(),
-        lr= args.lr,
-        betas=(0.9, 0.999),
-        eps=1e-8,
-        weight_decay=0,
-    )
-    # optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
+    # optimizer = optim.RAdam(
+    #     model.parameters(),
+    #     lr= args.lr,
+    #     betas=(0.9, 0.999),
+    #     eps=1e-8,
+    #     weight_decay=0,
+    # )
+    optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
     # optimizer = Adam(model.parameters(), lr = args.lr)
 
     criterion = RMSELoss()
     best_rmse = 30.
     rmse = []
     train_loss_overall = []
-    last_epoch = 12
+    last_epoch = 0
 
     for epoch in range(args.num_epochs):
         model.train()
@@ -126,11 +128,11 @@ if __name__ == "__main__":
         rmse.append(RMSE)
         train_loss_overall.append(train_loss)
         pick = {'train': train_loss_overall, 'val':rmse}
-        with open('./plot.pkl', 'wb') as f:
-            pickle.dump(pick, f)
+        # with open('./plot.pkl', 'wb') as f:
+        #     pickle.dump(pick, f)
         # if RMSE < best_rmse or epoch%10 == 0:
-        name = args.save_path + 'epoch_%d_%.5f.pth'%(epoch + last_epoch + 1, RMSE)
-        # best_rmse = RMSE
-        print('Saving model...')
-        torch.save(model.state_dict(), name)
+        # name = args.save_path + 'epoch_%d_%.5f.pth'%(epoch + last_epoch + 1, RMSE)
+        # # best_rmse = RMSE
+        # print('Saving model...')
+        # torch.save(model.state_dict(), name)
     # torch.save(model.state_dict(), args.save_path + 'last_epoch_%.5f.pth'%(RMSE))

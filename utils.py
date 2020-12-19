@@ -18,7 +18,7 @@ def train_epoch(model, loader, optimizer, criterion, device):
         b_size = image.size()[0]
         output = model(image)    
         loss = criterion(output, target)        
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none = True)
         loss.backward()
         optimizer.step()
 

@@ -75,8 +75,8 @@ class WindDataset(Dataset):
         #     return len(self.image_list)
         # else:
         #     return 1000
-        return len(self.image_list)
-        # return 2048
+        # return len(self.image_list)
+        return 4096
 
     def __getitem__(self, i):
         if not self.gray:
