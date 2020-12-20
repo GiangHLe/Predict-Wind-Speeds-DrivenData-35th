@@ -12,7 +12,7 @@ import torch_optimizer as optim
 from torch.optim import lr_scheduler, Adam, SGD
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
 from dataset import get_transforms, WindDataset
-from models import Seresnet_Wind, SimpleModel, ResNetFromExample
+from models import Seresnext_Wind, SimpleModel, ResNetFromExample, Seresnext_Wind_DenseShallow_Swish
 from sklearn.model_selection import train_test_split
 
 import pickle
@@ -22,35 +22,42 @@ from utils import train_epoch, val_epoch, RMSELoss
 
 class Hparameter(object):
     def __init__(self):
-        self.batch_size = 256
-        self.lr = 2e-4
+        self.batch_size = 128
+        self.lr = 1e-2
         self.num_workers = 8
-        self.num_epochs = 18
+        self.num_epochs = 30
         # self.image_size = 368
         self.image_size = 224
-        self.save_path = './weights/resnet50-full-Switch/'
+        self.save_path = './weights/seresnext50_exp/'
 
 if __name__ == "__main__":
     args = Hparameter()
     device = torch.device('cuda')
 
-    df = pd.read_csv('./data/training_set_labels.csv')
+    # df = pd.read_csv('./data/training_set_labels.csv')
     # target = np.array(df.wind_speed).astype(np.float32)
     # max_wind = np.amax(target)
     # target = list(target / max_wind)
 
-    image_id = df.image_id.to_list()
-    target = df.wind_speed.to_list()
+    # image_id = df.image_id.to_list()
+    # target = df.wind_speed.to_list()
+    
 
     # train, val, y_train, y_val = train_test_split(image_id, target, test_size = 0.2, random_state = 42, shuffle = True)
 
     df_train = pd.read_csv('./data/train_10first_10last.csv')
     df_val = pd.read_csv('./data/val_10first_10last.csv')
     train = df_train.image_id.to_list()
-    y_train = df_train.wind_speed.to_list()
+    # y_train = df_train.wind_speed.to_list()
+    y_train = df_train.exp_wind.to_list()
 
     val = df_val.image_id.to_list()
-    y_val = df_val.wind_speed.to_list()
+    y_val = df_val.exp_wind.to_list()
+
+    try:
+        mean = df_train.mean_wind.to_list()[0]
+    except:
+        mean = None
     
     transforms_train, transforms_val = get_transforms(args.image_size, gray = True)
 
@@ -73,7 +80,7 @@ if __name__ == "__main__":
         dataset_train, 
         batch_size=args.batch_size, 
         # sampler=RandomSampler(dataset_train), 
-        shuffle = False,
+        shuffle = True,
         num_workers=args.num_workers,
         drop_last=True
         )
@@ -85,12 +92,14 @@ if __name__ == "__main__":
         drop_last=True
         )
 
-    # model = Seresnet_Wind(type = 1, pretrained= False, gray = True)
+    # model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
+    model = Seresnext_Wind_DenseShallow_Swish(type = 1, pretrained=True, gray = False)
     # model = SimpleModel()
-    model = ResNetFromExample()
+    # model = ResNetFromExample()
     # print(model)
-    path = './weights/resnet50-full-Switch/epoch_17_4.67716.pth'
-    model.load_state_dict(torch.load(path))
+    # path = './weights/resnet50-full-Switch/epoch_17_4.67716.pth'
+    # path = './weights/seresnet50/epoch_10_0.18453.pth'
+    # model.load_state_dict(torch.load(path))
 
     # model = ResNet_Wind_LSTM(pretrained = False, gray = True)
     model.to(device)
@@ -108,10 +117,11 @@ if __name__ == "__main__":
     #     eps=1e-8,
     #     weight_decay=0,
     # )
-    optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
-    # optimizer = Adam(model.parameters(), lr = args.lr)
+    # optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
+    optimizer = Adam(model.parameters(), lr = args.lr)
 
-    criterion = RMSELoss()
+    # criterion = RMSELoss()
+    criterion = nn.MSELoss()
     best_rmse = 30.
     rmse = []
     train_loss_overall = []
@@ -124,15 +134,15 @@ if __name__ == "__main__":
         model.eval()
         torch.cuda.synchronize()
         max_wind = 1
-        RMSE = val_epoch(model, valid_loader, criterion, device, max_wind)
+        RMSE = val_epoch(model, valid_loader, criterion, device, max_wind, mean)
         rmse.append(RMSE)
         train_loss_overall.append(train_loss)
         pick = {'train': train_loss_overall, 'val':rmse}
-        # with open('./plot.pkl', 'wb') as f:
-        #     pickle.dump(pick, f)
+        with open('./plot.pkl', 'wb') as f:
+            pickle.dump(pick, f)
         # if RMSE < best_rmse or epoch%10 == 0:
-        # name = args.save_path + 'epoch_%d_%.5f.pth'%(epoch + last_epoch + 1, RMSE)
-        # # best_rmse = RMSE
-        # print('Saving model...')
-        # torch.save(model.state_dict(), name)
-    # torch.save(model.state_dict(), args.save_path + 'last_epoch_%.5f.pth'%(RMSE))
+        name = args.save_path + 'epoch_%d_%.5f.pth'%(epoch + last_epoch + 1, RMSE)
+        # best_rmse = RMSE
+        print('Saving model...')
+        torch.save(model.state_dict(), name)
+    torch.save(model.state_dict(), args.save_path + 'last_epoch_%.5f.pth'%(RMSE))
