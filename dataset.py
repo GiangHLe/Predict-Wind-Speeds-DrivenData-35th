@@ -75,10 +75,11 @@ class WindDataset(Dataset):
         #     return len(self.image_list)
         # else:
         #     return 1000
-        # return len(self.image_list)
-        return 4096
+        return len(self.image_list)
+        # return 4096
 
     def __getitem__(self, i):
+        # print(dataroot + self.image_list[i] + '.jpg')
         if not self.gray:
             image = cv2.imread(dataroot + self.image_list[i] + '.jpg')
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -90,7 +91,7 @@ class WindDataset(Dataset):
         else:
             image = image.astype(np.float32)
         # image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA).astype(np.float32)
-
+        
         if self.gray:
             image = np.expand_dims(image, axis = 2)
             image/=255.
