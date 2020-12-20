@@ -23,18 +23,19 @@ dataset_test = WindDataset(
 
 test_loader = DataLoader(
         dataset_test, 
-        batch_size = 256, 
+        batch_size = 180, 
         shuffle = False,
         num_workers = 12
         )
 
-NAME = 'sub3'
-weights_path = './weights/resnet50-full-Switch/epoch_30_4.63914.pth'
-model = ResNetFromExample()
+NAME = 'sub4_eval'
+weights_path = './weights/seresnet50_noBatchNorm1d/epoch_20_0.21236.pth'
+# model = ResNetFromExample()
+model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
 model.load_state_dict(torch.load(weights_path))
 model.to(device)
-# model.eval()
-model.train()
+model.eval()
+# model.train()
 
 from tqdm import tqdm
 
@@ -42,12 +43,12 @@ bar = tqdm(test_loader)
 
 result = np.zeros((0,1), dtype = np.float32)
 
-# with torch.no_grad():
-for image in bar:
-        image = image.to(device)
-        output = model(image).detach().cpu().numpy()
-        print(output)
-        result = np.concatenate((result, output), axis = 0)
+with torch.no_grad():
+        for image in bar:
+                image = image.to(device)
+                output = model(image).detach().cpu().numpy()
+                print(output)
+                result = np.concatenate((result, output), axis = 0)
 
 result = list((np.round(result)).astype(np.int32).flatten())
 df.wind_speed = result
