@@ -25,9 +25,9 @@ class Swish_Module(nn.Module):
         return Swish.apply(x)
 
 
-class Seresnet_Wind(nn.Module):
+class Seresnext_Wind(nn.Module):
     def __init__(self, type = 1, out_dim = 1, pretrained = True, gray = False):
-        super(Seresnet_Wind, self).__init__()
+        super(Seresnext_Wind, self).__init__()
         if type == 1:
             name = "se_resnext50_32x4d"
         else:
@@ -50,21 +50,70 @@ class Seresnet_Wind(nn.Module):
         self.avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.head = nn.Sequential(
             nn.Linear(2048, 512),
-            nn.Dropout(p = 0.4),
+            nn.Dropout(p = 0.2),
             nn.LeakyReLU(),
-            nn.BatchNorm1d(512),
+            # nn.BatchNorm1d(512),
             nn.Linear(512, 128),
-            nn.Dropout(p = 0.4),
+            nn.Dropout(p = 0.2),
             nn.LeakyReLU(),
-            nn.BatchNorm1d(128),
+            # nn.BatchNorm1d(128),
             nn.Linear(128, 32),
-            nn.Dropout(p = 0.5),
+            nn.Dropout(p = 0.2),
             nn.LeakyReLU(),
-            nn.BatchNorm1d(32),
+            # nn.BatchNorm1d(32),
             nn.Linear(32, out_dim)
         )
         # self.fea_bn = nn.BatchNorm1d(2048)
         # self.fea_bn.bias.requires_grad_(False)
+
+        if not pretrained:
+            self.extract.apply(init_weights)
+            self.head.apply(init_weights)
+            # self.fea_bn.apply(init_weights)
+    
+    def forward(self, x):
+        x = self.extract(x)
+        x = self.avg_pool(x)
+        x = x.view(x.size(0), -1)
+        # x = self.fea_bn(x)
+        out = self.head(x)
+        return out
+
+class Seresnext_Wind_DenseShallow_Swish(nn.Module):
+    def __init__(self, type = 1, out_dim = 1, pretrained = True, gray = False):
+        super(Seresnext_Wind_DenseShallow_Swish, self).__init__()
+        if type == 1:
+            name = "se_resnext50_32x4d"
+        else:
+            name = "se_resnext101_32x4d"
+        if pretrained:
+            self.extract = nn.Sequential(
+                *list(pretrainedmodels.__dict__[name](num_classes=1000, pretrained="imagenet").children())[
+                    :-2
+                ]
+            )
+        else:
+            self.extract = nn.Sequential(
+            *list(pretrainedmodels.__dict__[name](num_classes=1000, pretrained=None).children())[
+                :-2
+            ]
+        )
+        if gray:
+            # print(self.extract[0].conv1)
+            self.extract[0].conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        self.avg_pool = nn.AdaptiveAvgPool2d((1,1))
+        self.head = nn.Sequential(
+            nn.Linear(2048, 512),
+            nn.Dropout(p = 0.2),
+            Swish_Module(),
+            # nn.BatchNorm1d(512, momentum= 0.3),
+            nn.Linear(512, 128),
+            nn.Dropout(p = 0.2),
+            Swish_Module(),
+            nn.Linear(128, 1)
+        )
+        # self.fea_bn = nn.BatchNorm1d(2048)
+        # self.head[3].bias.requires_grad_(False)
 
         if not pretrained:
             self.extract.apply(init_weights)
@@ -147,7 +196,7 @@ class SimpleModel(nn.Module):
     def __init__(self):
         super(SimpleModel, self).__init__()
         self.extract = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False),
+            nn.Conv2d(1, 32, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False),
             nn.LeakyReLU(),
             nn.BatchNorm2d(32),
             nn.Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False),
