@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import pretrainedmodels
-from utils import init_weights
+from utils import init_weights,config_momentum
 from torchvision import models
 
 sigmoid = nn.Sigmoid()
@@ -163,7 +163,7 @@ class Seresnext_Wind_Conv2d_Swish(nn.Module):
         # self.head[3].bias.requires_grad_(False)
 
         if not pretrained:
-            self.extract.apply( )
+            self.extract.apply(init_weights)
             # self.head.apply(init_weights)
             self.conv_out.apply(init_weights)
             self.middle.apply(init_weights)
@@ -235,6 +235,36 @@ class ResNetFromExample(nn.Module):
             nn.Linear(2048, 50),
             nn.Dropout(p = 0.1),
             nn.ReLU(),
+            nn.Linear(50, 1),
+        )
+
+        self.extract.apply(config_momentum)
+        
+    def forward(self, x):
+        x = self.extract(x)
+        x = x.view(x.size(0), -1)
+        out = self.head(x)
+        return out
+
+class ResNetFromWeb(nn.Module):
+    def __init__(self, pretrained = True):
+        super(ResNetFromWeb, self).__init__()
+        if pretrained:
+            self.extract = nn.Sequential(
+                    *list(models.__dict__["resnet152"](num_classes=1000, pretrained='imagenet').children())[
+                        :-1
+                    ]
+                )
+        else:
+            self.extract = nn.Sequential(
+                    *list(models.__dict__["resnet152"](num_classes=1000, pretrained=None).children())[
+                        :-1
+                    ]
+                )
+        self.head = nn.Sequential(
+            nn.Linear(2048, 50),
+            nn.ReLU(inplace = True),
+            nn.Dropout(p = 0.1),
             nn.Linear(50, 1),
         )
     def forward(self, x):

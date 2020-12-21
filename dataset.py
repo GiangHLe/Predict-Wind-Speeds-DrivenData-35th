@@ -56,7 +56,8 @@ def get_transforms(image_size, gray = False):
     return transforms_train, transforms_val
 
 temp_transform = albumentations.Compose([
-            albumentations.Resize(224, 224),
+            # albumentations.Resize(224, 224),
+            albumentations.CenterCrop(224,224),
             albumentations.Normalize()
         ])
 
@@ -69,12 +70,12 @@ class WindDataset(Dataset):
         # self.transform = transform
         self.transform = temp_transform
         self.gray = gray
-        # self.a = a
+        self.a = a
     def __len__(self):
         # if not self.a:        
-        #     return len(self.image_list)
+        #     return 8192
         # else:
-        #     return 1000
+        #     return 1024
         return len(self.image_list)
         # return 4096
 

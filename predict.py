@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import pandas as pd
 import numpy as np
 
-from models import Seresnet_Wind, SimpleModel, ResNetFromExample
+from models import Seresnext_Wind, SimpleModel, ResNetFromExample, ResNetFromWeb
 from dataset import WindDataset
 
 
@@ -16,6 +16,7 @@ df = pd.read_csv(path)
 
 ids = df.image_id
 
+
 dataset_test = WindDataset(
         image_list = ids, 
         test = True, 
@@ -23,19 +24,22 @@ dataset_test = WindDataset(
 
 test_loader = DataLoader(
         dataset_test, 
-        batch_size = 180, 
+        batch_size = 256, 
         shuffle = False,
         num_workers = 12
         )
 
-NAME = 'sub4_eval'
-weights_path = './weights/seresnet50_noBatchNorm1d/epoch_20_0.21236.pth'
+warm_up = True
+train_mode = False
+
+NAME = 'sub7_train'
+weights_path = './weights/resnet_benhmark_another/epoch_8_26.16608.pth'
 # model = ResNetFromExample()
-model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
+# model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
+model = ResNetFromWeb()
 model.load_state_dict(torch.load(weights_path))
 model.to(device)
-model.eval()
-# model.train()
+# model.eval()
 
 from tqdm import tqdm
 
@@ -44,6 +48,17 @@ bar = tqdm(test_loader)
 result = np.zeros((0,1), dtype = np.float32)
 
 with torch.no_grad():
+        if warm_up:
+                print('Warm up....')
+                model.train()
+                for k,bimage in enumerate(test_loader):
+                        image = image.to(device)
+                        outpt = model(image)
+                        if k == 20:
+                                break
+                model.eval()
+        if train_mode:
+                model.train()
         for image in bar:
                 image = image.to(device)
                 output = model(image).detach().cpu().numpy()
