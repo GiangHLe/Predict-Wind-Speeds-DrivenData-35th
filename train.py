@@ -13,7 +13,8 @@ from torch.optim import lr_scheduler, Adam, SGD
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
 from dataset import get_transforms, WindDataset
 from models import Seresnext_Wind, SimpleModel, ResNetFromExample, \
-    Seresnext_Wind_DenseShallow_Swish, Seresnext_Wind_Conv2d_Swish
+    Seresnext_Wind_DenseShallow_Swish, Seresnext_Wind_Conv2d_Swish, \
+        ResNetFromWeb
 from sklearn.model_selection import train_test_split
 
 import pickle
@@ -23,13 +24,13 @@ from utils import train_epoch, val_epoch, RMSELoss
 
 class Hparameter(object):
     def __init__(self):
-        self.batch_size = 128
-        self.lr = 2e-3
+        self.batch_size = 100
+        self.lr = 2e-4
         self.num_workers = 8
-        self.num_epochs = 100
+        self.num_epochs = 30
         # self.image_size = 368
         self.image_size = 224
-        self.save_path = './weights/seresnext50_conv/'
+        self.save_path = './weights/resnet_benhmark_change_m/'
 
 if __name__ == "__main__":
     args = Hparameter()
@@ -49,17 +50,20 @@ if __name__ == "__main__":
     df_train = pd.read_csv('./data/train_10first_10last.csv')
     df_val = pd.read_csv('./data/val_10first_10last.csv')
     train = df_train.image_id.to_list()
-    # y_train = df_train.wind_speed.to_list()
-    y_train = df_train.exp_wind.to_list()
+    y_train = df_train.wind_speed.to_list()
+    # y_train = df_train.exp_wind.to_list()
 
     val = df_val.image_id.to_list()
-    y_val = df_val.exp_wind.to_list()
+    y_val = df_val.wind_speed.to_list()
+    # y_val = df_val.exp_wind.to_list()
 
-    try:
-        mean = df_train.mean_wind.to_list()[0]
-    except:
-        mean = None
-    
+    # try:
+    #     mean = df_train.mean_wind.to_list()[0]
+    # except:
+    #     mean = None
+    mean = None
+
+
     transforms_train, transforms_val = get_transforms(args.image_size, gray = True)
 
     dataset_train = WindDataset(
@@ -95,7 +99,8 @@ if __name__ == "__main__":
 
     # model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
     # model = Seresnext_Wind_DenseShallow_Swish(type = 1, pretrained=True, gray = False)
-    model = Seresnext_Wind_Conv2d_Swish(type = 1, pretrained=False, gray = False)
+    # model = Seresnext_Wind_Conv2d_Swish(type = 1, pretrained=False, gray = False)
+    model = ResNetFromWeb()
     # model = SimpleModel()
     # model = ResNetFromExample()
     # print(model)
@@ -123,8 +128,8 @@ if __name__ == "__main__":
     # optimizer = SGD(model.parameters(), lr = args.lr, momentum=0.9, nesterov= True)
     optimizer = Adam(model.parameters(), lr = args.lr)
 
-    # criterion = RMSELoss()
-    criterion = nn.MSELoss()
+    criterion = RMSELoss()
+    # criterion = nn.MSELoss()
     best_rmse = 30.
     rmse = []
     train_loss_overall = []

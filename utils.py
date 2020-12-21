@@ -17,7 +17,7 @@ def train_epoch(model, loader, optimizer, criterion, device):
         image, target = image.to(device), target.to(device)
         b_size = image.size()[0]
         output = model(image)    
-        loss = 5*criterion(output, target)        
+        loss = criterion(output, target)        
         optimizer.zero_grad(set_to_none = True)
         loss.backward()
         optimizer.step()
@@ -30,9 +30,9 @@ def train_epoch(model, loader, optimizer, criterion, device):
         temp2 = target.detach().cpu().numpy()# * 185.
         temp2 = np.expand_dims(temp2, axis = 1)
         
-        mean = 50.344008426206635
-        temp1 = t2wind(mean, temp1)
-        temp2 = t2wind(mean, temp2)
+        # mean = 50.344008426206635
+        # temp1 = t2wind(mean, temp1)
+        # temp2 = t2wind(mean, temp2)
 
         temp = np.concatenate((temp1,temp2), axis = 1)
         print(temp)
@@ -100,8 +100,9 @@ def val_epoch(model, loader, criterion, device, max_value, mean):
             
             temp = np.concatenate((output,target), axis = 1)
             print(temp)
-        RMSE = np.sqrt(RMSE)
         RMSE/=num_sample
+        RMSE = np.sqrt(RMSE)
+        
         print('RMSE: %.5f' % (RMSE))
     return RMSE
 
@@ -113,8 +114,11 @@ def init_weights(m):
         torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
     elif isinstance(m, nn.BatchNorm2d):
         m.reset_parameters()
+
+def config_momentum(m):
+    if isinstance(m, nn.BatchNorm2d):
         m.momentum = 0.4
-    
+            
 class RMSELoss(nn.Module):
     def __init__(self):
         super(RMSELoss, self).__init__()
