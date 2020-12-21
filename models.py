@@ -128,6 +128,57 @@ class Seresnext_Wind_DenseShallow_Swish(nn.Module):
         out = self.head(x)
         return out
 
+class Seresnext_Wind_Conv2d_Swish(nn.Module):
+    def __init__(self, type = 1, out_dim = 1, pretrained = True, gray = False):
+        super(Seresnext_Wind_Conv2d_Swish, self).__init__()
+        if type == 1:
+            name = "se_resnext50_32x4d"
+        else:
+            name = "se_resnext101_32x4d"
+        if pretrained:
+            self.extract = nn.Sequential(
+                *list(pretrainedmodels.__dict__[name](num_classes=1000, pretrained="imagenet").children())[
+                    :-2
+                ]
+            )
+        else:
+            self.extract = nn.Sequential(
+            *list(pretrainedmodels.__dict__[name](num_classes=1000, pretrained=None).children())[
+                :-2
+            ]
+        )
+        if gray:
+            # print(self.extract[0].conv1)
+            self.extract[0].conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        self.middle = nn.Sequential(
+            nn.Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), padding=(1, 1), bias=False),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.2, affine=True, track_running_stats=True),
+            nn.Conv2d(512, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False),
+            nn.BatchNorm2d(128, eps=1e-05, momentum=0.2, affine=True, track_running_stats=True),
+            # Swish_Module()
+        )
+        self.avg_pool = nn.AdaptiveAvgPool2d((1,1))
+        self.conv_out = nn.Conv2d(128, 1, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0), bias=True)
+        # self.fea_bn = nn.BatchNorm1d(2048)
+        # self.head[3].bias.requires_grad_(False)
+
+        if not pretrained:
+            self.extract.apply( )
+            # self.head.apply(init_weights)
+            self.conv_out.apply(init_weights)
+            self.middle.apply(init_weights)
+            # self.fea_bn.apply(init_weights)
+    
+    def forward(self, x):
+        x = self.extract(x)
+        x = self.middle(x)
+        x = self.avg_pool(x)
+        # print(x.size())
+        # x = x.view(x.size(0), -1)
+        # x = self.fea_bn(x)
+        out = self.conv_out(x)
+        return out.view(out.size(0), -1)
+
 class ResNet_Wind_LSTM(nn.Module):
     def __init__(self, gray, pretrained):
         super(ResNet_Wind_LSTM, self).__init__()

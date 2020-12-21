@@ -12,7 +12,8 @@ import torch_optimizer as optim
 from torch.optim import lr_scheduler, Adam, SGD
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
 from dataset import get_transforms, WindDataset
-from models import Seresnext_Wind, SimpleModel, ResNetFromExample, Seresnext_Wind_DenseShallow_Swish
+from models import Seresnext_Wind, SimpleModel, ResNetFromExample, \
+    Seresnext_Wind_DenseShallow_Swish, Seresnext_Wind_Conv2d_Swish
 from sklearn.model_selection import train_test_split
 
 import pickle
@@ -23,12 +24,12 @@ from utils import train_epoch, val_epoch, RMSELoss
 class Hparameter(object):
     def __init__(self):
         self.batch_size = 128
-        self.lr = 1e-2
+        self.lr = 2e-3
         self.num_workers = 8
-        self.num_epochs = 30
+        self.num_epochs = 100
         # self.image_size = 368
         self.image_size = 224
-        self.save_path = './weights/seresnext50_exp/'
+        self.save_path = './weights/seresnext50_conv/'
 
 if __name__ == "__main__":
     args = Hparameter()
@@ -93,12 +94,14 @@ if __name__ == "__main__":
         )
 
     # model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
-    model = Seresnext_Wind_DenseShallow_Swish(type = 1, pretrained=True, gray = False)
+    # model = Seresnext_Wind_DenseShallow_Swish(type = 1, pretrained=True, gray = False)
+    model = Seresnext_Wind_Conv2d_Swish(type = 1, pretrained=False, gray = False)
     # model = SimpleModel()
     # model = ResNetFromExample()
     # print(model)
     # path = './weights/resnet50-full-Switch/epoch_17_4.67716.pth'
     # path = './weights/seresnet50/epoch_10_0.18453.pth'
+    # path = './weights/seresnext50_exp/epoch_14_0.19151.pth'
     # model.load_state_dict(torch.load(path))
 
     # model = ResNet_Wind_LSTM(pretrained = False, gray = True)
@@ -117,7 +120,7 @@ if __name__ == "__main__":
     #     eps=1e-8,
     #     weight_decay=0,
     # )
-    # optimizer = SGD(model.parameters(), lr = real_lr, momentum=0.9, nesterov= True)
+    # optimizer = SGD(model.parameters(), lr = args.lr, momentum=0.9, nesterov= True)
     optimizer = Adam(model.parameters(), lr = args.lr)
 
     # criterion = RMSELoss()
