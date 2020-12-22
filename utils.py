@@ -28,7 +28,7 @@ def train_epoch(model, loader, optimizer, criterion, device):
         # if i%4==0:
         temp1 = output.detach().cpu().numpy()# * 185.
         temp2 = target.detach().cpu().numpy()# * 185.
-        temp2 = np.expand_dims(temp2, axis = 1)
+        # temp2 = np.expand_dims(temp2, axis = 1)
         
         # mean = 50.344008426206635
         # temp1 = t2wind(mean, temp1)
@@ -91,7 +91,8 @@ def val_epoch(model, loader, criterion, device, max_value, mean):
             num_sample += image.size()[0]
             output = model(image).detach().cpu().numpy()
             output*=max_value
-            target = np.expand_dims(target.detach().cpu().numpy(), axis = 1)
+            # target = np.expand_dims(target.detach().cpu().numpy(), axis = 1)
+            target = target.detach().cpu().numpy()
             target*=max_value
             if mean is not None:
                 output = t2wind(mean, output)

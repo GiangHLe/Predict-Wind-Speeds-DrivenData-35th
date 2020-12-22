@@ -24,7 +24,6 @@ class Swish_Module(nn.Module):
     def forward(self, x):
         return Swish.apply(x)
 
-
 class Seresnext_Wind(nn.Module):
     def __init__(self, type = 1, out_dim = 1, pretrained = True, gray = False):
         super(Seresnext_Wind, self).__init__()

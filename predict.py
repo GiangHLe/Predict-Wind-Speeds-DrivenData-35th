@@ -24,7 +24,7 @@ dataset_test = WindDataset(
 
 test_loader = DataLoader(
         dataset_test, 
-        batch_size = 256, 
+        batch_size = 1024, 
         shuffle = False,
         num_workers = 12
         )
@@ -32,14 +32,14 @@ test_loader = DataLoader(
 warm_up = True
 train_mode = False
 
-NAME = 'sub7_train'
-weights_path = './weights/resnet_benhmark_another/epoch_8_26.16608.pth'
+NAME = 'sub_warm_2'
+weights_path = './weights/resnet_benhmark_change_m/epoch_9_8.13840.pth'
 # model = ResNetFromExample()
 # model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
 model = ResNetFromWeb()
 model.load_state_dict(torch.load(weights_path))
 model.to(device)
-# model.eval()
+model.eval()
 
 from tqdm import tqdm
 
@@ -51,10 +51,10 @@ with torch.no_grad():
         if warm_up:
                 print('Warm up....')
                 model.train()
-                for k,bimage in enumerate(test_loader):
+                for k,image in enumerate(test_loader):
                         image = image.to(device)
                         outpt = model(image)
-                        if k == 20:
+                        if k == 2:
                                 break
                 model.eval()
         if train_mode:

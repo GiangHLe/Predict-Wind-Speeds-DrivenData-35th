@@ -6,8 +6,8 @@ import albumentations
 import torch
 from torch.utils.data import Dataset
 
-dataroot = '/home/giang/Desktop/Wind_data/train/'
-# dataroot = '/home/giang/Desktop/Wind_data/test/'
+# dataroot = '/home/giang/Desktop/Wind_data/train/'
+dataroot = '/home/giang/Desktop/Wind_data/test/'
 # dataroot = 'C:/Users/Admin/Desktop/Wind_data/train/'
 
 def get_transforms(image_size, gray = False):
@@ -80,31 +80,27 @@ class WindDataset(Dataset):
         # return 4096
 
     def __getitem__(self, i):
-        # print(dataroot + self.image_list[i] + '.jpg')
         if not self.gray:
             image = cv2.imread(dataroot + self.image_list[i] + '.jpg')
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         else:
             image = cv2.imread(dataroot + self.image_list[i] + '.jpg', 0)
-        # print(self.image_list[i])
         if self.transform:
             image = self.transform(image=image)['image'].astype(np.float32)
         else:
             image = image.astype(np.float32)
-        # image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA).astype(np.float32)
         
         if self.gray:
             image = np.expand_dims(image, axis = 2)
             image/=255.
+        image = torch.Tensor(image).float()
         image = torch.tensor(image).float()
         image = image.permute(2,0,1)
         if self.test:
             return image
-        return image, torch.tensor(self.target[i]).float()
+        return image, torch.Tensor([self.target[i]]).float()
 
 def process_submiss(path):
     image = cv2.imread(path)
     image = temp_transform(image = image)['image'].astype(np.float32)
-    # image = torch.tensor(image).float()
-    # image = image.permute(2,0,1)
     return image
