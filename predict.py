@@ -1,3 +1,5 @@
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import torch
 from torch.utils.data import DataLoader
 
@@ -16,7 +18,8 @@ df = pd.read_csv(path)
 
 ids = df.image_id
 
-prefix = 'C:/Users/Admin/Desktop/Wind_data/test/'
+# prefix = 'C:/Users/Admin/Desktop/Wind_data/test/'
+prefix = 'D:/Predict_Wind/test/'
 
 ids = [prefix + str(i) + '.jpg' for i in ids]
 
@@ -30,7 +33,7 @@ dataset_test = WindDataset(
 
 test_loader = DataLoader(
         dataset_test, 
-        batch_size = 200, 
+        batch_size = 1024, 
         shuffle = False,
         num_workers = 0
         )
@@ -38,8 +41,8 @@ test_loader = DataLoader(
 warm_up = True
 train_mode = False
 
-NAME = 'sub_reset'
-weights_path = './epoch19.pth'
+NAME = 'sub_reset_sgd_l2_warm_more'
+weights_path = './../epoch39.pth'
 # model = ResNetFromExample()
 # model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
 model = Seresnext_Wind()

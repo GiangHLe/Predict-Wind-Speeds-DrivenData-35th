@@ -12,27 +12,27 @@ class RMSELoss(nn.Module):
     def forward(self, x, y):
         return torch.sqrt(self.mse(x, y))
 
-class JointLoss(nn.Module):
-    def __init__(self):
-        super(JointLoss, self).__init__()
-        self.mse = nn.MSELoss()
-        self.ce = nn.CrossEntropyLoss()
-    def forward(self, x, y_class, y_reg):
-        # Joint the loss from classification part and regression part,
-        # only update for regression when the classify correct.
-        classify = x[:,:3]
-        regeression = x[:,3:]
-        pred = torch.argmax(classify.clone().detach().cpu(), dim = 1, keepdims = True)
+# class JointLoss(nn.Module):
+#     def __init__(self):
+#         super(JointLoss, self).__init__()
+#         self.mse = nn.MSELoss()
+#         self.ce = nn.CrossEntropyLoss()
+#     def forward(self, x, y_class, y_reg):
+#         # Joint the loss from classification part and regression part,
+#         # only update for regression when the classify correct.
+#         classify = x[:,:3]
+#         regeression = x[:,3:]
+#         pred = torch.argmax(classify.clone().detach().cpu(), dim = 1, keepdims = True)
     
-        mask = (pred==y_class).flatten()
+#         mask = (pred==y_class).flatten()
 
-        true_classify = classify[mask]
-        true_regression = regeression[mask]
-        false_classify = classify[torch.logical_not(mask)]
-        false_regression = regression[torch.logical_not(mask)]
+#         true_classify = classify[mask]
+#         true_regression = regeression[mask]
+#         false_classify = classify[torch.logical_not(mask)]
+#         false_regression = regression[torch.logical_not(mask)]
 
-        true_loss = self.ce
-        return None
+#         true_loss = self.ce
+#         return None
 
 sigmoid = nn.Sigmoid()
 

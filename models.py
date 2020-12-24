@@ -80,7 +80,7 @@ class Seresnext_Wind_Exp(nn.Module):
         self.head = nn.Sequential(
             nn.Linear(2048, 512, bias= True),
             Swish_Module(),
-            nn.BatchNorm1d(512)
+            nn.BatchNorm1d(512),
             nn.Dropout(p = 0.2),
             nn.Linear(512, 128, bias= False),
             nn.Dropout(p = 0.2),
@@ -124,7 +124,7 @@ class Seresnext_Wind_Exp_anchor(nn.Module):
         self.head = nn.Sequential(
             nn.Conv2d(2048, 64, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0), bias=False),
             Swish_Module(),
-            nn.BatchNorm1d(512)
+            nn.BatchNorm1d(512),
             nn.Dropout(p = 0.2),
             nn.Linear(512, 128, bias= False),
             nn.Dropout(p = 0.2),
