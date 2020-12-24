@@ -35,3 +35,4 @@ class WindDataset(Dataset):
         if self.test:
             return image
         return image, torch.Tensor([self.target[i]]).float()
+        

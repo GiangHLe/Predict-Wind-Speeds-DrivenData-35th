@@ -4,7 +4,7 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import argparse
 import pandas as pd
 
-from utils import RMSELoss, write_log
+from utils import RMSELoss, write_log, extract_number
 from dataset import WindDataset, get_transform
 
 import json
@@ -41,7 +41,7 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
         # print(temp)
     return np.mean(all_loss)
 
-def val_epoch(model, dataloader, device):
+def val_epoch(model, dataloader, device, exp):
     model.eval()
     bar = tqdm(dataloader)
     RMSE = 0.
@@ -52,22 +52,34 @@ def val_epoch(model, dataloader, device):
             num_sample += image.size(0)
             output = model(image).detach().cpu().numpy()
             target = target.numpy()
+            if exp:
+                mean = 50.34400842620664
+                output = mean * np.exp(output)
+                target = mean * np.exp(target)
             RMSE += np.sum((output - target)**2)
     return np.sqrt(RMSE/num_sample)
 
 
 def main():
-
     shuffle = not(args.no_shuffle)
+    exp = args.exp
+
+    # Load and process data
     
     df_train = pd.read_csv(args.data_path + 'official_train.csv')
     df_val = pd.read_csv(args.data_path + 'official_val.csv')
     
     train = df_train.image_path.to_list()
-    y_train = df_train.wind_speed.to_list()
+    if exp:
+        y_train = df_train.exp_wind.to_list()
+    else:
+        y_train = df_train.wind_speed.to_list()
 
     val = df_val.image_path.to_list()
-    y_val = df_val.wind_speed.to_list()
+    if exp:
+        y_val = df_val.exp_wind.to_list()
+    else:
+        y_val = df_val.wind_speed.to_list()
     
     transform = get_transform(args.image_size)
 
@@ -99,33 +111,46 @@ def main():
         drop_last=True
     )
 
+    # Load model
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    last_epoch = 0
 
     # model = ResNetExample()
-    model = Seresnext_Wind()
+    if not exp:
+        model = Seresnext_Wind()
+    else:
+        model = Seresnext_Wind_Exp()
+ 
+    if args.weights:
+        model.load_state_dict(torch.load(args.weights))
+        last_epoch = extract_number(args.weights)
     model.to(device)
 
+    # Optimizer
     if args.opt == 'radam':
         optimizer = optim.RAdam(
             model.parameters(),
             lr= args.lr,
             betas=(0.9, 0.999),
             eps=1e-8,
-            weight_decay=0,
+            weight_decay=args.weight_decay,
         )
     elif args.opt == 'adam':
         optimizer = Adam(model.parameters(), args.lr)
     else:
         optimizer = SGD(model.parameters(), args.lr, momentum = 0.9, nesterov= True)
     
+    # Loss function
     criterion = RMSELoss()
     
+    # generate log and visualization
     save_path = args.save_path
 
     log_cache = (
         args.batch_size,
         args.image_size,
-        shuffle
+        shuffle,
+        exp
     )
 
     write_log(
@@ -147,22 +172,29 @@ def main():
         write_mode = 'a'
         with open(plot_train_path, 'r') as j:
             plot_dict = json.load(j)
+            plot_dict['train'] = plot_dict['train'][:last_epoch]
+            plot_dict['val'] = plot_dict['val'][:last_epoch]
 
+    # Training
     with open(log_train_path, write_mode) as f:
         for epoch in range(1, args.epoch+1):
-            f.write('Epoch: %d\n'%(epoch))
+            f.write('Epoch: %d\n'%(epoch+last_epoch))
             loss = train_epoch(model = model,
                                dataloader = train_loader, 
                                optimizer = optimizer, 
                                criterion = criterion, 
-                               device = device)
+                               device = device
+                            )
             RMSE = val_epoch(model = model,
                              dataloader=val_loader, 
-                             device=device)
+                             device=device,
+                             exp = exp
+                            )
             f.write('Training loss: %.4f\n'%(loss))
             f.write('RMSE val: %.4f\n'%(RMSE))
+            print('RMSE loss: %.4f'%(loss))
             print('RMSE val: %.4f'%(RMSE))
-            torch.save(model.state_dict(), save_path + 'epoch%d.pth'%(epoch))
+            torch.save(model.state_dict(), save_path + 'epoch%d.pth'%(epoch+last_epoch))
 
             plot_dict['train'].append(loss)
             plot_dict['val'].append(RMSE)
@@ -173,14 +205,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
      
     parser.add_argument('save_path', type = str, help = 'Directory where to save model and plot information')
+    parser.add_argument('--weights', type = str, default = None, help = 'Weights path')
     parser.add_argument('--data_path', type = str, default='./data/', help = 'where to store data and csv file')
     parser.add_argument('--epoch', type = int, default=20, help = 'Learning rate')
     parser.add_argument('--batch-size', type = int, default=95, help = 'Batch size')
-    parser.add_argument('--lr', type = int, default=2e-3, help = 'Learning rate')
+    parser.add_argument('--lr', type = float, default=2e-3, help = 'Learning rate')
     parser.add_argument('--opt', type = str, default='radam', help = 'Select optimizer')
     parser.add_argument('--image-size', type = int, default=224, help = 'Size of image input to models')
     parser.add_argument('--num-workers', type = int, default=8, help = 'Number of process in Datat Loader')
-    
+    parser.add_argument('--weight-decay', type = float, default=0, help = 'L2 Regularization')
+
+    parser.add_argument('--anchor', action = 'store_true', help = 'use 3 anchor for this problem')
+    parser.add_argument('--exp', action = 'store_true', help = 'use exponential target')
     parser.add_argument('--no-shuffle', action='store_true', help = 'shuffle while training')
     parser.add_argument('--show', action='store_true', help = 'show the result while training')
     
