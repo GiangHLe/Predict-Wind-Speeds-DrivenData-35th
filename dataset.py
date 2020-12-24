@@ -16,7 +16,7 @@ def get_transform(image_size):
     return transform
 
 class WindDataset(Dataset):
-    def __init__(self, image_list, target, transform = None, test = False):
+    def __init__(self, image_list, target = None, transform = None, test = False):
         self.image_list = image_list
         self.target = target
         self.transform = transform
