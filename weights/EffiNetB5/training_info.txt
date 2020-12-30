@@ -1,11 +1,11 @@
 Optimizer: 
-SGD (
+AdamW (
 Parameter Group 0
-    dampening: 0
-    lr: 0.0003
-    momentum: 0.9
-    nesterov: True
-    weight_decay: 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.0002
+    weight_decay: 0.01
 )
 Loss Function: 
 RMSELoss(

@@ -2,7 +2,7 @@ Optimizer:
 SGD (
 Parameter Group 0
     dampening: 0
-    lr: 0.0003
+    lr: 0.001
     momentum: 0.9
     nesterov: True
     weight_decay: 0
@@ -11,7 +11,7 @@ Loss Function:
 RMSELoss(
   (mse): MSELoss()
 )
-Batch size: 26
-Input image size: 366
+Batch size: 95
+Input image size: 224
 Data shuffle: True
-Exponential target: False
+Exponential target: True
