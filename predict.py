@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import pandas as pd
 import numpy as np
 
-from models import Seresnext_Wind
+from models import *
 from dataset import WindDataset, get_transform
 
 
@@ -16,14 +16,17 @@ path = './data/submission_format.csv'
 # path = './data/train.csv'
 df = pd.read_csv(path)
 
-ids = df.image_id
+side_df = pd.read_csv('./data/official_test.csv')
+ids = side_df.image_path
+# ids = df.image_id
 
 # prefix = 'C:/Users/Admin/Desktop/Wind_data/test/'
-prefix = 'D:/Predict_Wind/test/'
+# prefix = 'D:/Predict_Wind/test/'
 
-ids = [prefix + str(i) + '.jpg' for i in ids]
+# ids = [prefix + str(i) + '.jpg' for i in ids]
+batch_size = 256
 
-transform = get_transform(224)
+_, transform = get_transform(366)
 
 dataset_test = WindDataset(
         image_list = ids,
@@ -31,28 +34,37 @@ dataset_test = WindDataset(
         test = True
         )
 
+shuffle_loader = DataLoader(
+        dataset_test, 
+        batch_size = batch_size, 
+        shuffle = True,
+        num_workers = 8
+        )
+
 test_loader = DataLoader(
         dataset_test, 
-        batch_size = 1024, 
+        batch_size = batch_size, 
         shuffle = False,
-        num_workers = 0
+        num_workers = 8
         )
 
 warm_up = True
 train_mode = False
-
-NAME = 'sub_reset_sgd_l2_warm_more'
-weights_path = './../epoch39.pth'
+exp = False
+NAME = 'EffB5_2'
+weights_path = './weights/EffiNetB5_aug_reset_m/epoch31.pth'
 # model = ResNetFromExample()
 # model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
-model = Seresnext_Wind()
+# model = Seresnext_Wind_Exp()
+model = Effnet_Wind_B5()
+# model = ResNet50_BN_idea()
 model.load_state_dict(torch.load(weights_path))
 model.to(device)
 model.eval()
 
 from tqdm import tqdm
 
-bar = tqdm(test_loader)
+# bar = tqdm(test_loader)
 
 result = np.zeros((0,1), dtype = np.float32)
 
@@ -60,18 +72,22 @@ with torch.no_grad():
         if warm_up:
                 print('Warm up....')
                 model.train()
-                for k,image in enumerate(test_loader):
+                for k,image in enumerate(shuffle_loader):
                         image = image.to(device)
                         outpt = model(image)
-                        if k == 2:
+                        if k == 2048//batch_size:
                                 break
                 model.eval()
         if train_mode:
                 model.train()
-        for image in bar:
+        for image in tqdm(test_loader):
                 image = image.to(device)
                 output = model(image).detach().cpu().numpy()
                 # print(output)
+                # print(output)
+                if exp:
+                        mean = 50.34400842620664
+                        output = mean * np.exp(output)
                 result = np.concatenate((result, output), axis = 0)
 
 result = list((np.round(result)).astype(np.int32).flatten())
