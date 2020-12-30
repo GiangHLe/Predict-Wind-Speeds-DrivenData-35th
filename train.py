@@ -1,10 +1,15 @@
+'''
+TODO: + test augment
+      + test 
+'''
+
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 import argparse
 import pandas as pd
 
-from utils import RMSELoss, write_log, extract_number
+from utils import RMSELoss, write_log, extract_number, reset_m_batchnorm, save_pth
 from dataset import WindDataset, get_transform
 
 import json
@@ -13,11 +18,22 @@ import numpy as np
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
-from torch.optim import Adam,SGD
-import torch_optimizer as optim
+from torch.optim import Adam, AdamW, SGD
+from torch_optimizer import RAdam# optim#.RAdam as RAdam
 from tqdm import tqdm
 
 from models import *
+
+def check_optim(optimizer):
+    all_opt = {
+        AdamW: 'adamw',
+        Adam: 'adam',
+        SGD: 'sgd',
+        RAdam: 'radam'
+    }
+    for i in all_opt.keys():
+        if isinstance(optimizer, i):
+            return all_opt[i]
 
 def train_epoch(model, dataloader, optimizer, criterion, device):
     model.train()
@@ -66,6 +82,9 @@ def main():
 
     # Load and process data
     
+    # df_train = pd.read_csv('/home/giang/Desktop/Wind_data/reproduce/train.csv')
+    # df_val = pd.read_csv('/home/giang/Desktop/Wind_data/reproduce/val.csv')
+
     df_train = pd.read_csv(args.data_path + 'official_train.csv')
     df_val = pd.read_csv(args.data_path + 'official_val.csv')
     
@@ -81,18 +100,18 @@ def main():
     else:
         y_val = df_val.wind_speed.to_list()
     
-    transform = get_transform(args.image_size)
+    train_transform, val_transform = get_transform(args.image_size)
 
     train_dataset = WindDataset(
         image_list = train,
         target = y_train,
-        transform = transform
+        transform = train_transform
     )
 
     val_dataset = WindDataset(
         image_list = val,
         target = y_val,
-        transform = transform
+        transform = val_transform
     )
 
     train_loader = DataLoader(
@@ -115,31 +134,59 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     last_epoch = 0
 
+    # model = ResNet50_BN_idea()
+    
+    model = Effnet_Wind_B5()
     # model = ResNetExample()
-    if not exp:
-        model = Seresnext_Wind()
-    else:
-        model = Seresnext_Wind_Exp()
- 
-    if args.weights:
-        model.load_state_dict(torch.load(args.weights))
-        last_epoch = extract_number(args.weights)
-    model.to(device)
+    # if not exp:
+    #     model = Seresnext_Wind()
+    # else:
+    #     model = Seresnext_Wind_Exp()
 
     # Optimizer
     if args.opt == 'radam':
-        optimizer = optim.RAdam(
+        optimizer = RAdam(
             model.parameters(),
             lr= args.lr,
             betas=(0.9, 0.999),
             eps=1e-8,
             weight_decay=args.weight_decay,
         )
+    elif args.opt == 'adamw':
+        optimizer = AdamW(
+            model.parameters(), 
+            args.lr
+        )
+
     elif args.opt == 'adam':
-        optimizer = Adam(model.parameters(), args.lr)
+        optimizer = Adam(
+            model.parameters(), 
+            args.lr,
+            weight_decay=args.weight_decay
+        )
     else:
-        optimizer = SGD(model.parameters(), args.lr, momentum = 0.9, nesterov= True)
+        optimizer = SGD(
+            model.parameters(), 
+            args.lr, 
+            momentum = 0.9, 
+            nesterov= True,
+            weight_decay=args.weight_decay
+        )
     
+    if args.weights:
+        # model.load_state_dict(torch.load(args.weights))
+        last_epoch = extract_number(args.weights)
+        try:
+            checkpoint = torch.load(args.weights)
+            model.load_state_dict(checkpoint['model_state_dict'])
+            if checkpoint['pre_opt'] == args.opt:
+                optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        except:
+            model.load_state_dict(torch.load(args.weights))
+    else:
+        model.apply(reset_m_batchnorm)
+    model.to(device)
+
     # Loss function
     criterion = RMSELoss()
     
@@ -178,6 +225,7 @@ def main():
     # Training
     with open(log_train_path, write_mode) as f:
         for epoch in range(1, args.epoch+1):
+            print('Epoch:',epoch + last_epoch)
             f.write('Epoch: %d\n'%(epoch+last_epoch))
             loss = train_epoch(model = model,
                                dataloader = train_loader, 
@@ -194,7 +242,9 @@ def main():
             f.write('RMSE val: %.4f\n'%(RMSE))
             print('RMSE loss: %.4f'%(loss))
             print('RMSE val: %.4f'%(RMSE))
-            torch.save(model.state_dict(), save_path + 'epoch%d.pth'%(epoch+last_epoch))
+            # torch.save(model.state_dict(), save_path + 'epoch%d.pth'%(epoch+last_epoch))
+            save_name = save_path + 'epoch%d.pth'%(epoch+last_epoch)
+            save_pth(save_name , epoch+last_epoch, model, optimizer, args.opt)
 
             plot_dict['train'].append(loss)
             plot_dict['val'].append(RMSE)
@@ -207,13 +257,13 @@ if __name__ == "__main__":
     parser.add_argument('save_path', type = str, help = 'Directory where to save model and plot information')
     parser.add_argument('--weights', type = str, default = None, help = 'Weights path')
     parser.add_argument('--data_path', type = str, default='./data/', help = 'where to store data and csv file')
-    parser.add_argument('--epoch', type = int, default=20, help = 'Learning rate')
-    parser.add_argument('--batch-size', type = int, default=95, help = 'Batch size')
-    parser.add_argument('--lr', type = float, default=2e-3, help = 'Learning rate')
+    parser.add_argument('--epoch', type = int, default=100, help = 'Learning rate')
+    parser.add_argument('--batch-size', type = int, default=26, help = 'Batch size')
+    parser.add_argument('--lr', type = float, default=3e-4, help = 'Learning rate')
     parser.add_argument('--opt', type = str, default='radam', help = 'Select optimizer')
-    parser.add_argument('--image-size', type = int, default=224, help = 'Size of image input to models')
+    parser.add_argument('--image-size', type = int, default=366, help = 'Size of image input to models')
     parser.add_argument('--num-workers', type = int, default=8, help = 'Number of process in Datat Loader')
-    parser.add_argument('--weight-decay', type = float, default=0, help = 'L2 Regularization')
+    parser.add_argument('--weight-decay', type = float, default=0., help = 'L2 Regularization')
 
     parser.add_argument('--anchor', action = 'store_true', help = 'use 3 anchor for this problem')
     parser.add_argument('--exp', action = 'store_true', help = 'use exponential target')
