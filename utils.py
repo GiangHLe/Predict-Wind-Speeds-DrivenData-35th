@@ -108,6 +108,3 @@ def save_pth(path, epoch, model, optimizer, type_opt):
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict()
     }, path)
-
-
-

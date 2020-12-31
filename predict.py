@@ -51,14 +51,16 @@ test_loader = DataLoader(
 warm_up = True
 train_mode = False
 exp = False
-NAME = 'EffB5_2'
-weights_path = './weights/EffiNetB5_aug_reset_m/epoch31.pth'
+NAME = 'EffB5_3'
+weights_path = './weights/EffiNetB5_aug_reset_m/epoch87.pth'
 # model = ResNetFromExample()
 # model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
 # model = Seresnext_Wind_Exp()
 model = Effnet_Wind_B5()
 # model = ResNet50_BN_idea()
-model.load_state_dict(torch.load(weights_path))
+# model.load_state_dict(torch.load(weights_path))
+checkpoint = torch.load(weights_path)
+model.load_state_dict(checkpoint['model_state_dict'])
 model.to(device)
 model.eval()
 
