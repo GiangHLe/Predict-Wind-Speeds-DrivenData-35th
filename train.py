@@ -181,12 +181,14 @@ def main():
             model.load_state_dict(checkpoint['model_state_dict'])
             if checkpoint['pre_opt'] == args.opt:
                 optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+                print(optimizer)
         except:
             model.load_state_dict(torch.load(args.weights))
     else:
         model.apply(reset_m_batchnorm)
-    model.to(device)
 
+    model.to(device)
+    
     # Loss function
     criterion = RMSELoss()
     
