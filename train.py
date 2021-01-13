@@ -9,7 +9,11 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import argparse
 import pandas as pd
 
-from utils import RMSELoss, write_log, extract_number, reset_m_batchnorm, save_pth
+from utils import (
+    RMSELoss, JointLoss, write_log, extract_number, reset_m_batchnorm, \
+    save_pth
+)
+
 from dataset import WindDataset, get_transform
 
 import json
@@ -19,7 +23,7 @@ import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 from torch.optim import Adam, AdamW, SGD
-from torch_optimizer import RAdam# optim#.RAdam as RAdam
+from torch_optimizer import RAdam # optim#.RAdam as RAdam
 from tqdm import tqdm
 
 from models import *
@@ -36,6 +40,7 @@ def check_optim(optimizer):
             return all_opt[i]
 
 def train_epoch(model, dataloader, optimizer, criterion, device):
+    # torch.autograd.set_detect_anomaly(True)
     model.train()
     bar = tqdm(dataloader)
     all_loss = list()
@@ -57,7 +62,7 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
         # print(temp)
     return np.mean(all_loss)
 
-def val_epoch(model, dataloader, device, exp):
+def val_epoch(model, dataloader, device, exp, anchors):
     model.eval()
     bar = tqdm(dataloader)
     RMSE = 0.
@@ -66,17 +71,27 @@ def val_epoch(model, dataloader, device, exp):
         for (image, target) in bar:
             image = image.to(device)
             num_sample += image.size(0)
-            output = model(image).detach().cpu().numpy()
+            predict = model(image).detach().cpu().numpy()
             target = target.numpy()
             if exp:
-                mean = 50.34400842620664
-                output = mean * np.exp(output)
-                target = mean * np.exp(target)
-            RMSE += np.sum((output - target)**2)
+                predict = np.squeeze(predict)
+                classify_y = target[:,0].astype(np.int32)
+                regression_y = target[:,1]
+
+                label = np.argmax(predict[:,:3], axis= 1)
+                print(label.shape)
+                anchor = np.array([anchors[i] for i in label])
+                exp_scale = predict[:,3:]
+                predict = anchor * np.exp(exp_scale)
+
+                real_anchor = np.array([anchors[i] for i in classify_y])
+                target = real_anchor * np.exp(regression_y)
+            RMSE += np.sum((predict - target)**2)
     return np.sqrt(RMSE/num_sample)
 
 
 def main():
+    anchors = [30,54,95]
     shuffle = not(args.no_shuffle)
     exp = args.exp
 
@@ -89,28 +104,29 @@ def main():
     df_val = pd.read_csv(args.data_path + 'official_val.csv')
     
     train = df_train.image_path.to_list()
-    if exp:
-        y_train = df_train.exp_wind.to_list()
-    else:
-        y_train = df_train.wind_speed.to_list()
-
     val = df_val.image_path.to_list()
     if exp:
-        y_val = df_val.exp_wind.to_list()
+        y_train = df_train.anchor.to_list()
+        y_val = df_val.anchor.to_list()
+        reg_train_gt = df_train.exp_wind.to_list()
+        reg_val_gt = df_val.exp_wind.to_list()
     else:
-        y_val = df_val.wind_speed.to_list()
+        y_train = df_train.wind_speed.to_list()
+        y_val = df_val.wind_speed.to_list()        
     
     train_transform, val_transform = get_transform(args.image_size)
 
     train_dataset = WindDataset(
         image_list = train,
         target = y_train,
+        exp_target = reg_train_gt if exp else None,
         transform = train_transform
     )
 
     val_dataset = WindDataset(
         image_list = val,
         target = y_val,
+        exp_target = reg_val_gt if exp else None,
         transform = val_transform
     )
 
@@ -135,8 +151,10 @@ def main():
     last_epoch = 0
 
     # model = ResNet50_BN_idea()
-    
-    model = Effnet_Wind_B5()
+    if not exp:
+        model = Effnet_Wind_B5()
+    else:
+        model = Effnet_Wind_B5_exp()
     # model = ResNetExample()
     # if not exp:
     #     model = Seresnext_Wind()
@@ -190,8 +208,11 @@ def main():
     model.to(device)
     
     # Loss function
-    criterion = RMSELoss()
-    
+    if exp:
+        criterion = JointLoss()
+    else:
+        criterion = RMSELoss()
+
     # generate log and visualization
     save_path = args.save_path
 
@@ -238,7 +259,8 @@ def main():
             RMSE = val_epoch(model = model,
                              dataloader=val_loader, 
                              device=device,
-                             exp = exp
+                             exp = exp,
+                             anchors= anchors
                             )
             f.write('Training loss: %.4f\n'%(loss))
             f.write('RMSE val: %.4f\n'%(RMSE))
@@ -267,8 +289,7 @@ if __name__ == "__main__":
     parser.add_argument('--num-workers', type = int, default=8, help = 'Number of process in Datat Loader')
     parser.add_argument('--weight-decay', type = float, default=0., help = 'L2 Regularization')
 
-    parser.add_argument('--anchor', action = 'store_true', help = 'use 3 anchor for this problem')
-    parser.add_argument('--exp', action = 'store_true', help = 'use exponential target')
+    parser.add_argument('--exp', action = 'store_true', help = 'use exponential target and clusters')
     parser.add_argument('--no-shuffle', action='store_true', help = 'shuffle while training')
     parser.add_argument('--show', action='store_true', help = 'show the result while training')
     
