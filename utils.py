@@ -17,22 +17,24 @@ class JointLoss(nn.Module):
         super(JointLoss, self).__init__()
         self.mse = nn.MSELoss()
         self.ce = nn.CrossEntropyLoss()
-    def forward(self, x, y_class, y_reg):
+    def forward(self, x, y):
         # Joint the loss from classification part and regression part,
-        # only update for regression when the classify correct.
-        classify = x[:,:3]
-        regeression = x[:,3:]
-        pred = torch.argmax(classify.clone().detach().cpu(), dim = 1, keepdims = True)
-    
+        # only update for regression when the classify correct. 
+        classify = x[:,:3].squeeze()
+        regression = x[:,3:].squeeze()
+        y_class = y[:,0].type(torch.LongTensor).to(y.device)
+        y_reg  = y[:,1]
+        pred = torch.argmax(classify, dim = 1).to(y_class.device)
         mask = (pred==y_class).flatten()
         
-        true_classify = classify[mask]
-        true_regression = regeression[mask]
-        false_classify = classify[torch.logical_not(mask)]
-        false_regression = regression[torch.logical_not(mask)]
-
-        true_loss = self.ce
-        return None
+        classify_loss = 5*self.ce(classify, y_class) # add coordinate, since the classification part is the key of this method
+        
+        # regression[torch.logical_not(mask)] = 0.0
+        # y_reg[torch.logical_not(mask)] = 0.0
+        regression_loss = self.mse(regression[mask], y_reg[mask])
+        # regression_loss = self.mse(regression, y_reg)
+    
+        return classify_loss + regression_loss
 
 sigmoid = nn.Sigmoid()
 
