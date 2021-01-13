@@ -37,16 +37,19 @@ def get_transform(image_size, base_size = 366):
     return train_transform, val_transform
 
 class WindDataset(Dataset):
-    def __init__(self, image_list, target = None, transform = None, test = False):
+    def __init__(self, image_list, target = None, exp_target = None, transform = None, test = False, exp = False):
         self.image_list = image_list
         self.target = target
+        
+        self.exp_target = exp_target
+
         self.transform = transform
         self.test = test
 
     def __len__(self):
         # return int(0.1*len(self.image_list))
         return len(self.image_list)
-        # return 1024
+        # return 26*5
 
     def __getitem__(self, i):
         # read by PIL and transform with pytorch in original 
@@ -56,5 +59,7 @@ class WindDataset(Dataset):
             image = self.transform(image = image)['image']
         if self.test:
             return image
-        return image, torch.Tensor([self.target[i]]).float()
-        
+        if self.exp_target is None:
+            return image, torch.Tensor([self.target[i]]).float()
+        else:
+            return image, torch.Tensor([self.target[i], self.exp_target[i]]).type(torch.FloatTensor)
