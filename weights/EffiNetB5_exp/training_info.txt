@@ -5,14 +5,13 @@ Parameter Group 0
     buffer: [[None, None, None], [None, None, None], [None, None, None], [None, None, None], [None, None, None], [None, None, None], [None, None, None], [None, None, None], [None, None, None], [None, None, None]]
     eps: 1e-08
     lr: 0.0003
-    weight_decay: 0.0
+    weight_decay: 0.01
 )
 Loss Function: 
-JointLoss(
+RMSELoss(
   (mse): MSELoss()
-  (ce): CrossEntropyLoss()
 )
 Batch size: 26
 Input image size: 366
 Data shuffle: True
-Exponential target: True
+Exponential target: False

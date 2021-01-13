@@ -1,9 +1,9 @@
-Effnet_Wind_B5_exp(
-  (extract): Sequential(
-    (0): Conv2dSame(3, 48, kernel_size=(3, 3), stride=(2, 2), bias=False)
-    (1): BatchNorm2d(48, eps=0.001, momentum=0.5, affine=True, track_running_stats=True)
-    (2): SwishMe()
-    (3): Sequential(
+Effnet_Wind_B5(
+  (model): GenEfficientNet(
+    (conv_stem): Conv2dSame(3, 48, kernel_size=(3, 3), stride=(2, 2), bias=False)
+    (bn1): BatchNorm2d(48, eps=0.001, momentum=0.5, affine=True, track_running_stats=True)
+    (act1): SwishMe()
+    (blocks): Sequential(
       (0): Sequential(
         (0): DepthwiseSeparableConv(
           (conv_dw): Conv2d(48, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=48, bias=False)
@@ -637,15 +637,21 @@ Effnet_Wind_B5_exp(
         )
       )
     )
-    (4): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
-    (5): BatchNorm2d(2048, eps=0.001, momentum=0.5, affine=True, track_running_stats=True)
-    (6): SwishMe()
-  )
-  (predict): Sequential(
-    (0): Conv2d(2048, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
-    (1): Swish_Module()
-    (2): BatchNorm2d(128, eps=1e-05, momentum=0.5, affine=True, track_running_stats=True)
-    (3): AdaptiveAvgPool2d(output_size=(1, 1))
-    (4): Conv2d(128, 4, kernel_size=(1, 1), stride=(1, 1))
+    (conv_head): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+    (bn2): BatchNorm2d(2048, eps=0.001, momentum=0.5, affine=True, track_running_stats=True)
+    (act2): SwishMe()
+    (global_pool): AdaptiveAvgPool2d(output_size=1)
+    (classifier): Sequential(
+      (0): Linear(in_features=2048, out_features=512, bias=True)
+      (1): Dropout(p=0.2, inplace=False)
+      (2): LeakyReLU(negative_slope=0.01)
+      (3): Linear(in_features=512, out_features=128, bias=True)
+      (4): Dropout(p=0.2, inplace=False)
+      (5): LeakyReLU(negative_slope=0.01)
+      (6): Linear(in_features=128, out_features=32, bias=True)
+      (7): Dropout(p=0.2, inplace=False)
+      (8): LeakyReLU(negative_slope=0.01)
+      (9): Linear(in_features=32, out_features=1, bias=True)
+    )
   )
 )
