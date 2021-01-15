@@ -16,15 +16,19 @@ def get_transform(image_size, base_size = 366):
         albumentations.Transpose(p=0.3),
         albumentations.VerticalFlip(p=0.3),
         albumentations.HorizontalFlip(p=0.3),
-        albumentations.CLAHE(p=0.3),
-        albumentations.Equalize(p=0.3),
+        # albumentations.Equalize(p=0.3),
+        albumentations.OneOf([
+            albumentations.RandomContrast(),
+            albumentations.RandomBrightness(),
+            albumentations.CLAHE(),
+        ],p=0.3),
         albumentations.OneOf([
             albumentations.GaussianBlur(blur_limit=5),
             albumentations.GaussNoise(var_limit = (5, 30)),
             albumentations.MedianBlur(blur_limit = 5)
-        ], p = 0.5),
+        ], p = 0.3),
         resize,
-        albumentations.Cutout(max_h_size = int(image_size * 0.2), max_w_size = int(image_size * 0.2), num_holes = 1, p =0.3),
+        albumentations.Cutout(max_h_size = int(image_size * 0.1), max_w_size = int(image_size * 0.1), num_holes = 3, p =0.3),
         albumentations.Normalize(), 
         ToTensorV2()
     ])
