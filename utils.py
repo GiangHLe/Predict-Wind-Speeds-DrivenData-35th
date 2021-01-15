@@ -20,21 +20,24 @@ class JointLoss(nn.Module):
     def forward(self, x, y):
         # Joint the loss from classification part and regression part,
         # only update for regression when the classify correct. 
-        classify = x[:,:3].squeeze()
-        regression = x[:,3:].squeeze()
+        x = x.squeeze()
+        classify = x[:,:3]
+        regression = x[:,3:]
         y_class = y[:,0].type(torch.LongTensor).to(y.device)
         y_reg  = y[:,1]
         pred = torch.argmax(classify, dim = 1).to(y_class.device)
         mask = (pred==y_class).flatten()
-        
-        classify_loss = 5*self.ce(classify, y_class) # add coordinate, since the classification part is the key of this method
-        
+        classify_loss = self.ce(classify, y_class) # add coordinate, since the classification part is the key of this method
         # regression[torch.logical_not(mask)] = 0.0
         # y_reg[torch.logical_not(mask)] = 0.0
-        regression_loss = self.mse(regression[mask], y_reg[mask])
+        regression_loss = self.mse(regression[mask].squeeze(), y_reg[mask]) # wrong shape, serious bug
         # regression_loss = self.mse(regression, y_reg)
-    
-        return classify_loss + regression_loss
+        total_loss = classify_loss + regression_loss
+        return [
+            total_loss, 
+            classify_loss.clone().detach().cpu(), 
+            regression_loss.clone().detach().cpu()
+            ]
 
 sigmoid = nn.Sigmoid()
 

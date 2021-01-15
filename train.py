@@ -39,34 +39,48 @@ def check_optim(optimizer):
         if isinstance(optimizer, i):
             return all_opt[i]
 
-def train_epoch(model, dataloader, optimizer, criterion, device):
+def train_epoch(model, dataloader, optimizer, criterion, device, exp):
     # torch.autograd.set_detect_anomaly(True)
     model.train()
     bar = tqdm(dataloader)
     all_loss = list()
+    all_class = list()
+    all_reg = list()
     for (image, target) in bar:
         image, target = image.to(device), target.to(device)
         output = model(image)
         optimizer.zero_grad()
-        loss = criterion(output, target)
+        if not exp:
+            loss = criterion(output, target)
+        else:
+            loss, class_loss, reg_loss = criterion(output, target)
         loss.backward()
         optimizer.step()
 
-        loss_np = loss.detach().cpu().item()
+        loss_np = loss.clone().detach().cpu().item()
         all_loss.append(loss_np)
-        bar.set_description('Loss %.4f'%(loss_np))
+        if exp:
+            all_class.append(class_loss)
+            all_reg.append(reg_loss)
+        bar.set_description('Loss: %.4f, classify: %.4f, reg: %.4f'%(loss_np, class_loss, reg_loss))
 
         # temp1 = output.clone().detach().cpu().numpy()
         # temp2 = target.clone().detach().cpu().numpy()
         # temp = np.concatenate((temp1,temp2), axis = 1)
         # print(temp)
-    return np.mean(all_loss)
+    all_loss = np.mean(np.array(all_loss), axis = 0)
+    if exp:
+        all_class = np.mean(np.array(all_class), axis = 0)
+        all_reg = np.mean(np.array(all_reg), axis = 0)
+        return all_loss, all_class, all_reg
+    return all_loss
 
 def val_epoch(model, dataloader, device, exp, anchors):
     model.eval()
     bar = tqdm(dataloader)
     RMSE = 0.
     num_sample = 0.
+    correct_class = 0.
     with torch.no_grad():
         for (image, target) in bar:
             image = image.to(device)
@@ -74,21 +88,25 @@ def val_epoch(model, dataloader, device, exp, anchors):
             predict = model(image).detach().cpu().numpy()
             target = target.numpy()
             if exp:
+                # convert from 4D -> 2D
                 predict = np.squeeze(predict)
+                # Get label
                 classify_y = target[:,0].astype(np.int32)
                 regression_y = target[:,1]
-
+                # Classification results from model
                 label = np.argmax(predict[:,:3], axis= 1)
-                print(label.shape)
-                anchor = np.array([anchors[i] for i in label])
+                # Get correct samples from classification task to calculate accuracy and anchor to scale
+                correct_class+=len(np.where(label == classify_y)[0])
+                anchor = np.expand_dims(np.array([anchors[i] for i in label]),axis = 1)
+                # anchor*exp(output)
                 exp_scale = predict[:,3:]
                 predict = anchor * np.exp(exp_scale)
-
+                # Ground truth
                 real_anchor = np.array([anchors[i] for i in classify_y])
-                target = real_anchor * np.exp(regression_y)
+                target = np.expand_dims(real_anchor * np.exp(regression_y), axis = 1)
             RMSE += np.sum((predict - target)**2)
-    return np.sqrt(RMSE/num_sample)
-
+    RMSE = np.sqrt(RMSE/num_sample)
+    return [RMSE, correct_class/num_sample] if exp else RMSE
 
 def main():
     anchors = [30,54,95]
@@ -254,7 +272,8 @@ def main():
                                dataloader = train_loader, 
                                optimizer = optimizer, 
                                criterion = criterion, 
-                               device = device
+                               device = device,
+                               exp = exp
                             )
             RMSE = val_epoch(model = model,
                              dataloader=val_loader, 
@@ -262,10 +281,25 @@ def main():
                              exp = exp,
                              anchors= anchors
                             )
-            f.write('Training loss: %.4f\n'%(loss))
-            f.write('RMSE val: %.4f\n'%(RMSE))
-            print('RMSE loss: %.4f'%(loss))
-            print('RMSE val: %.4f'%(RMSE))
+            if not exp:
+                f.write('Training loss: %.4f\n'%(loss))
+                f.write('RMSE val: %.4f\n'%(RMSE))
+                print('RMSE loss: %.4f'%(loss))
+                print('RMSE val: %.4f'%(RMSE))
+            else:
+                loss, classify, regress = loss
+                RMSE, accuracy = RMSE
+                f.write('Training loss: %.4f\n'%(loss))
+                f.write('Classification loss: %.4f\n'%(classify))
+                f.write('Regression loss: %.4f\n'%(regress))
+                f.write('Accuracy val: %.4f\n'%(accuracy))
+                f.write('RMSE val: %.4f\n'%(RMSE))
+                print('Training loss: %.4f'%(loss))
+                print('Classification loss: %.4f'%(classify))
+                print('Regression loss: %.4f'%(regress))
+                print('Accuracy val: %.4f'%(accuracy))
+                print('RMSE val: %.4f'%(RMSE))
+
             # torch.save(model.state_dict(), save_path + 'epoch%d.pth'%(epoch+last_epoch))
             save_name = save_path + 'epoch%d.pth'%(epoch+last_epoch)
             save_pth(save_name , epoch+last_epoch, model, optimizer, args.opt)
