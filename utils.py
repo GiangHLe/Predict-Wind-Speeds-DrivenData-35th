@@ -39,6 +39,32 @@ class JointLoss(nn.Module):
             regression_loss.clone().detach().cpu()
             ]
 
+class JointLoss2(nn.Module):
+    def __init__(self):
+        super(JointLoss2, self).__init__()
+        self.mse = nn.MSELoss()
+        self.ce = nn.CrossEntropyLoss()
+    def forward(self, x,y):
+        x = x.squeeze()
+        classify = x[:,:3]
+        regression = x[:,3:]
+        y_class = y[:,0].type(torch.LongTensor).to(y.device)
+        y_reg  = y[:,1]
+
+        pred = torch.argmax(classify, dim = 1).to(y_class.device)
+        mask = (pred==y_class).flatten()
+
+        classify_loss = self.ce(classify, y_class)
+
+        index = torch.zeros(regression.shape).scatter_(1, pred.unsqueeze(dim = 1), 1).type(torch.bool)
+        regression_loss = self.mse(regression[index].squeeze(), y_reg[mask])
+        total_loss = classify_loss + regression_loss
+        return [
+            total_loss, 
+            classify_loss.clone().detach().cpu(), 
+            regression_loss.clone().detach().cpu()
+            ]
+
 sigmoid = nn.Sigmoid()
 
 class Swish(torch.autograd.Function):
