@@ -50,13 +50,13 @@ test_loader = DataLoader(
 
 warm_up = True
 train_mode = False
-exp = False
-NAME = 'EffB5_3'
-weights_path = './weights/EffiNetB5_aug_reset_m/epoch87.pth'
+exp = True
+NAME = 'EffB5_exp_10'
+weights_path = './weights/EffiNetB5_exp/epoch10.pth'
 # model = ResNetFromExample()
 # model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
 # model = Seresnext_Wind_Exp()
-model = Effnet_Wind_B5()
+model = Effnet_Wind_B5_exp()
 # model = ResNet50_BN_idea()
 # model.load_state_dict(torch.load(weights_path))
 checkpoint = torch.load(weights_path)
@@ -88,8 +88,14 @@ with torch.no_grad():
                 # print(output)
                 # print(output)
                 if exp:
-                        mean = 50.34400842620664
-                        output = mean * np.exp(output)
+                        predict = np.squeeze(output)
+                        anchors = [30, 54, 95]
+                        label = np.argmax(predict[:,:3], axis= 1)
+                        anchor = np.array([anchors[i] for i in label])
+                        exp_scale = predict[:,3]
+                        output = anchor * np.exp(exp_scale)
+                        # print(output.shape,anchor.shape,exp_scale.shape)
+                        output = np.expand_dims(output, axis=1)
                 result = np.concatenate((result, output), axis = 0)
 
 result = list((np.round(result)).astype(np.int32).flatten())
