@@ -174,6 +174,7 @@ class Effnet_Wind_B5(nn.Module):
         return self.model(x)
 
 class Effnet_Wind_B5_exp(nn.Module):
+    # fail
     def __init__(self):
         super(Effnet_Wind_B5_exp, self).__init__()
         # self.model = geffnet.create_model('tf_efficientnet_b5_ns', pretrained=True)
@@ -188,6 +189,26 @@ class Effnet_Wind_B5_exp(nn.Module):
             nn.BatchNorm2d(128),
             nn.AdaptiveAvgPool2d((1,1)),
             nn.Conv2d(128, 4, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0), bias=True),
+        )
+    def forward(self, x):
+        features = self.extract(x)
+        return self.predict(features)
+    
+class Effnet_Wind_B5_exp_6(nn.Module):
+    def __init__(self):
+        super(Effnet_Wind_B5_exp_6, self).__init__()
+        # self.model = geffnet.create_model('tf_efficientnet_b5_ns', pretrained=True)
+        self.extract = nn.Sequential(
+                *list(geffnet.__dict__['tf_efficientnet_b5_ns'](num_classes=1000, pretrained="imagenet").children())[
+                    :-2
+                ]
+            )
+        self.predict = nn.Sequential(
+            nn.Conv2d(2048, 128, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0), bias=False),
+            Swish_Module(),
+            nn.BatchNorm2d(128),
+            nn.AdaptiveAvgPool2d((1,1)),
+            nn.Conv2d(128, 6, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0), bias=True),
         )
     def forward(self, x):
         features = self.extract(x)
