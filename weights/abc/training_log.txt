@@ -473,3 +473,190 @@ Regression loss: 0.0036
 Accuracy val: 0.6154
 RMSE val: 13.6259
 Epoch: 34
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Epoch: 1
+Training loss: nan
+Classification loss: 1.1533
+Regression loss: nan
+Accuracy val: 0.0769
+RMSE val: 71.9539
+Epoch: 2
+Training loss: nan
+Classification loss: 1.0616
+Regression loss: nan
+Accuracy val: 0.0769
+RMSE val: 69.9201
+Epoch: 1
+Training loss: nan
+Classification loss: 1.0544
+Regression loss: nan
+Accuracy val: 0.0385
+RMSE val: 33.0375
+Epoch: 2
+Training loss: 0.9985
+Classification loss: 0.9680
+Regression loss: 0.0305
+Accuracy val: 0.4231
+RMSE val: 33.0519
+Epoch: 1
+Training loss: nan
+Classification loss: 1.0183
+Regression loss: nan
+Accuracy val: 0.3462
+RMSE val: 23.2410
+Epoch: 2
+Epoch: 1
+Training loss: nan
+Classification loss: 1.1116
+Regression loss: nan
+Accuracy val: 0.2692
+RMSE val: 35.6993
+Epoch: 2
+Epoch: 1
+Training loss: 1.1420
+Classification loss: 1.0651
+Regression loss: 0.0770
+Accuracy val: 0.4231
+RMSE val: 21.1699
+Epoch: 2
+Epoch: 1
+Training loss: nan
+Classification loss: 1.1550
+Regression loss: nan
+Accuracy val: 0.2308
+RMSE val: 27.0111
+Epoch: 2
+Epoch: 1
+Training loss: 1.4285
+Classification loss: 1.0724
+Regression loss: 0.3561
+Accuracy val: 0.0000
+RMSE val: 42.5577
+Epoch: 2
+Training loss: 1.0919
+Classification loss: 1.0311
+Regression loss: 0.0608
+Accuracy val: 0.4583
+RMSE val: 14.7793
+Epoch: 3
+Epoch: 1
+Training loss: nan
+Classification loss: 1.0849
+Regression loss: nan
+Accuracy val: 0.4583
+RMSE val: 17.1992
+Epoch: 2
+Epoch: 1
+Training loss: 0.9693
+Classification loss: 0.8202
+Regression loss: 0.1491
+Accuracy val: 0.6231
+RMSE val: 40.2066
+Epoch: 2
+Training loss: 0.3120
+Classification loss: 0.2901
+Regression loss: 0.0219
+Accuracy val: 0.6231
+RMSE val: 32.3096
+Epoch: 3
+Training loss: 0.1851
+Classification loss: 0.1728
+Regression loss: 0.0123
+Accuracy val: 0.6308
+RMSE val: 31.4470
+Epoch: 4
+Training loss: 0.1152
+Classification loss: 0.1068
+Regression loss: 0.0083
+Accuracy val: 0.6308
+RMSE val: 28.1587
+Epoch: 5
+Training loss: 0.0957
+Classification loss: 0.0876
+Regression loss: 0.0081
+Accuracy val: 0.6154
+RMSE val: 29.1398
+Epoch: 6
+Training loss: 0.2320
+Classification loss: 0.2191
+Regression loss: 0.0129
+Accuracy val: 0.5769
+RMSE val: 26.1027
+Epoch: 7
+Training loss: 0.1798
+Classification loss: 0.1704
+Regression loss: 0.0094
+Accuracy val: 0.6154
+RMSE val: 21.6826
+Epoch: 8
+Training loss: 0.1861
+Classification loss: 0.1763
+Regression loss: 0.0098
+Accuracy val: 0.6462
+RMSE val: 28.0758
+Epoch: 9
+Training loss: 0.1070
+Classification loss: 0.0997
+Regression loss: 0.0072
+Accuracy val: 0.6154
+RMSE val: 25.6039
+Epoch: 10
+Training loss: 0.1005
+Classification loss: 0.0922
+Regression loss: 0.0083
+Accuracy val: 0.6077
+RMSE val: 24.3663
+Epoch: 11
+Training loss: 0.1241
+Classification loss: 0.1149
+Regression loss: 0.0092
+Accuracy val: 0.6154
+RMSE val: 26.0484
+Epoch: 12
+Training loss: 0.0609
+Classification loss: 0.0544
+Regression loss: 0.0065
+Accuracy val: 0.5538
+RMSE val: 29.7255
+Epoch: 13
+Training loss: 0.0821
+Classification loss: 0.0712
+Regression loss: 0.0109
+Accuracy val: 0.6077
+RMSE val: 30.7376
+Epoch: 14
+Training loss: 0.0882
+Classification loss: 0.0792
+Regression loss: 0.0090
+Accuracy val: 0.6077
+RMSE val: 30.9221
+Epoch: 15
+Training loss: 0.0543
+Classification loss: 0.0467
+Regression loss: 0.0076
+Accuracy val: 0.6000
+RMSE val: 24.6556
+Epoch: 16
