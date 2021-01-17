@@ -51,8 +51,8 @@ test_loader = DataLoader(
 warm_up = True
 train_mode = False
 exp = True
-NAME = 'EffB5_exp_10'
-weights_path = './weights/EffiNetB5_exp/epoch10.pth'
+NAME = 'EffB5_exp_55'
+weights_path = './weights/EffiNetB5_exp/epoch55.pth'
 # model = ResNetFromExample()
 # model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
 # model = Seresnext_Wind_Exp()

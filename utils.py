@@ -52,13 +52,11 @@ class JointLoss2(nn.Module):
         y_reg  = y[:,1]
 
         pred = torch.argmax(classify, dim = 1).to(y_class.device)
-        mask = (pred==y_class).flatten()
-
+        regress_label = y_reg[(pred==y_class).flatten()]
         classify_loss = self.ce(classify, y_class)
-
-        index = torch.zeros(regression.shape).scatter_(1, pred.unsqueeze(dim = 1), 1).type(torch.bool)
-        regression_loss = self.mse(regression[index].squeeze(), y_reg[mask])
-        total_loss = classify_loss + regression_loss
+        index = torch.zeros(regression.shape).to(regression.device).scatter_(1, regress_label.type(torch.int64).unsqueeze(dim = 1), 1).type(torch.bool)
+        regression_loss = self.mse(regression[index].squeeze(), regress_label)
+        total_loss = 3*classify_loss + regression_loss
         return [
             total_loss, 
             classify_loss.clone().detach().cpu(), 

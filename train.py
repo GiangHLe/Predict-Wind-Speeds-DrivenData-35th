@@ -10,8 +10,8 @@ import argparse
 import pandas as pd
 
 from utils import (
-    RMSELoss, JointLoss, write_log, extract_number, reset_m_batchnorm, \
-    save_pth
+    RMSELoss, JointLoss, JointLoss2, write_log, extract_number, \
+    reset_m_batchnorm, save_pth
 )
 
 from dataset import WindDataset, get_transform
@@ -99,11 +99,20 @@ def val_epoch(model, dataloader, device, exp, anchors):
                 correct_class+=len(np.where(label == classify_y)[0])
                 anchor = np.expand_dims(np.array([anchors[i] for i in label]),axis = 1)
                 # anchor*exp(output)
-                exp_scale = predict[:,3:]
-                predict = anchor * np.exp(exp_scale)
+
+                '''test'''
+                regression = predict[:,3:]
+
+                index = np.zeros(regression.shape)
+                index[np.arange(label.shape[0]),label] = 1
+                index = index.astype(np.bool)
+
+                exp_scale = regression[index]
+                predict = np.squeeze(anchor) * np.exp(exp_scale)
+
                 # Ground truth
                 real_anchor = np.array([anchors[i] for i in classify_y])
-                target = np.expand_dims(real_anchor * np.exp(regression_y), axis = 1)
+                target = real_anchor * np.exp(regression_y)
             RMSE += np.sum((predict - target)**2)
     RMSE = np.sqrt(RMSE/num_sample)
     return [RMSE, correct_class/num_sample] if exp else RMSE
@@ -172,7 +181,7 @@ def main():
     if not exp:
         model = Effnet_Wind_B5()
     else:
-        model = Effnet_Wind_B5_exp()
+        model = Effnet_Wind_B5_exp_6()
     # model = ResNetExample()
     # if not exp:
     #     model = Seresnext_Wind()
@@ -227,7 +236,7 @@ def main():
     
     # Loss function
     if exp:
-        criterion = JointLoss()
+        criterion = JointLoss2()
     else:
         criterion = RMSELoss()
 
