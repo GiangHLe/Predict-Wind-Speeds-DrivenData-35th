@@ -13,22 +13,21 @@ def get_transform(image_size, base_size = 366):
         resize = albumentations.CenterCrop(image_size, image_size)
     
     train_transform = albumentations.Compose([
-        albumentations.Transpose(p=0.3),
-        albumentations.VerticalFlip(p=0.3),
-        albumentations.HorizontalFlip(p=0.3),
+        albumentations.VerticalFlip(p=0.5),
+        albumentations.HorizontalFlip(p=0.5),
         # albumentations.Equalize(p=0.3),
+        # albumentations.OneOf([
+        #     albumentations.RandomContrast(),
+        #     albumentations.RandomBrightness(),
+        #     albumentations.CLAHE(),
+        # ],p=0.3),
         albumentations.OneOf([
-            albumentations.RandomContrast(),
-            albumentations.RandomBrightness(),
-            albumentations.CLAHE(),
-        ],p=0.3),
-        albumentations.OneOf([
-            albumentations.GaussianBlur(blur_limit=5),
-            albumentations.GaussNoise(var_limit = (5, 30)),
-            albumentations.MedianBlur(blur_limit = 5)
-        ], p = 0.3),
+            albumentations.GaussianBlur(blur_limit=3),
+            albumentations.GaussNoise(var_limit = (3, 10)),
+            albumentations.MedianBlur(blur_limit = 3)
+        ], p = 0.5),
         resize,
-        albumentations.Cutout(max_h_size = int(image_size * 0.1), max_w_size = int(image_size * 0.1), num_holes = 3, p =0.3),
+        # albumentations.Cutout(max_h_size = int(image_size * 0.1), max_w_size = int(image_size * 0.1), num_holes = 3, p =0.3),
         albumentations.Normalize(), 
         ToTensorV2()
     ])
@@ -57,7 +56,9 @@ class WindDataset(Dataset):
 
     def __getitem__(self, i):
         # read by PIL and transform with pytorch in original 
+        # image = cv2.imread(self.image_list[i] + '.jpg')
         image = cv2.imread(self.image_list[i])
+        # print(self.image_list[i])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  
         if self.transform:
             image = self.transform(image = image)['image']
