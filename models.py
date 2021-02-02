@@ -213,4 +213,21 @@ class Effnet_Wind_B5_exp_6(nn.Module):
     def forward(self, x):
         features = self.extract(x)
         return self.predict(features)
-    
+
+
+class Effnet_Wind_B7(nn.Module):
+    def __init__(self):
+        super(Effnet_Wind_B7, self).__init__()
+        self.model = geffnet.create_model('tf_efficientnet_b7_ns', pretrained=True)
+        self.model.classifier = nn.Linear(2560, 1, bias= True)
+    def forward(self, x):
+        return self.model(x)
+    def freeze_except_last(self):
+        for name, param in self.model.named_parameters():
+            if 'classifier' in name:
+                continue
+            else:
+                param.requires_grad = False
+    def unfreeze(self):
+        for param in self.model.parameters():
+            param.requires_grad = True
