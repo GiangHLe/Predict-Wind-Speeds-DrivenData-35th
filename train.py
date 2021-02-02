@@ -39,6 +39,27 @@ def check_optim(optimizer):
         if isinstance(optimizer, i):
             return all_opt[i]
 
+def warm_up(model, dataloader, optimizer, criterion, device, exp):
+    model.train()
+    bar = tqdm(dataloader)
+    for (image, target) in bar:
+        image, target = image.to(device), target.to(device)
+        output = model(image)
+        optimizer.zero_grad()
+        if not exp:
+            loss = criterion(output, target)
+        else:
+            loss, class_loss, reg_loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+        loss_np = loss.clone().detach().cpu().item()
+        if exp:
+            all_class.append(class_loss)
+            all_reg.append(reg_loss)
+            bar.set_description('Loss: %.4f, classify: %.4f, reg: %.4f'%(loss_np, class_loss, reg_loss))
+        else:
+            bar.set_description('Loss: %.4f'%(loss_np))
+
 def train_epoch(model, dataloader, optimizer, criterion, device, exp):
     # torch.autograd.set_detect_anomaly(True)
     model.train()
@@ -62,8 +83,9 @@ def train_epoch(model, dataloader, optimizer, criterion, device, exp):
         if exp:
             all_class.append(class_loss)
             all_reg.append(reg_loss)
-        bar.set_description('Loss: %.4f, classify: %.4f, reg: %.4f'%(loss_np, class_loss, reg_loss))
-
+            bar.set_description('Loss: %.4f, classify: %.4f, reg: %.4f'%(loss_np, class_loss, reg_loss))
+        else:
+            bar.set_description('Loss: %.4f'%(loss_np))
         # temp1 = output.clone().detach().cpu().numpy()
         # temp2 = target.clone().detach().cpu().numpy()
         # temp = np.concatenate((temp1,temp2), axis = 1)
@@ -121,14 +143,16 @@ def main():
     anchors = [30,54,95]
     shuffle = not(args.no_shuffle)
     exp = args.exp
+    warm_up_epoch = 3
 
     # Load and process data
     
-    # df_train = pd.read_csv('/home/giang/Desktop/Wind_data/reproduce/train.csv')
-    # df_val = pd.read_csv('/home/giang/Desktop/Wind_data/reproduce/val.csv')
-
-    df_train = pd.read_csv(args.data_path + 'official_train.csv')
-    df_val = pd.read_csv(args.data_path + 'official_val.csv')
+    if args.fold:
+        df_train = pd.read_csv(args.data_path + 'k_fold/official_train_fold%d.csv'%(args.fold))
+        df_val = pd.read_csv(args.data_path + 'k_fold/official_val_fold%d.csv'%(args.fold))
+    else:
+        df_train = pd.read_csv(args.data_path + 'official_train.csv')
+        df_val = pd.read_csv(args.data_path + 'official_val.csv')
     
     train = df_train.image_path.to_list()
     val = df_val.image_path.to_list()
@@ -173,13 +197,22 @@ def main():
         drop_last=True
     )
 
+    warm_loader = DataLoader(
+        dataset = train_dataset,
+        batch_size=args.batch_size*14,
+        shuffle=shuffle,
+        num_workers=args.num_workers,
+        drop_last=True
+    )
+
     # Load model
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     last_epoch = 0
 
     # model = ResNet50_BN_idea()
     if not exp:
-        model = Effnet_Wind_B5()
+        model = Effnet_Wind_B7()
+        # model = Effnet_Wind_B5()
     else:
         model = Effnet_Wind_B5_exp_6()
     # model = ResNetExample()
@@ -273,6 +306,16 @@ def main():
             plot_dict['val'] = plot_dict['val'][:last_epoch]
 
     # Training
+    print('Start warm up')
+    model.freeze_except_last()
+    for epoch in range(warm_up_epoch):
+        warm_up(model= model,
+                dataloader= warm_loader, 
+                optimizer = optimizer, 
+                criterion = criterion,
+                device = device,
+                )
+    model.unfreeze()
     with open(log_train_path, write_mode) as f:
         for epoch in range(1, args.epoch+1):
             print('Epoch:',epoch + last_epoch)
@@ -325,12 +368,13 @@ if __name__ == "__main__":
     parser.add_argument('--weights', type = str, default = None, help = 'Weights path')
     parser.add_argument('--data_path', type = str, default='./data/', help = 'where to store data and csv file')
     parser.add_argument('--epoch', type = int, default=100, help = 'Learning rate')
-    parser.add_argument('--batch-size', type = int, default=26, help = 'Batch size')
+    parser.add_argument('--batch-size', type = int, default=15, help = 'Batch size')
     parser.add_argument('--lr', type = float, default=3e-4, help = 'Learning rate')
     parser.add_argument('--opt', type = str, default='radam', help = 'Select optimizer')
     parser.add_argument('--image-size', type = int, default=366, help = 'Size of image input to models')
     parser.add_argument('--num-workers', type = int, default=8, help = 'Number of process in Datat Loader')
     parser.add_argument('--weight-decay', type = float, default=0., help = 'L2 Regularization')
+    parser.add_argument('--fold', type = int, default=None, help = 'Fold index')
 
     parser.add_argument('--exp', action = 'store_true', help = 'use exponential target and clusters')
     parser.add_argument('--no-shuffle', action='store_true', help = 'shuffle while training')
