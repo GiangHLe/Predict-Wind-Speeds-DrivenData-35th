@@ -24,7 +24,7 @@ ids = side_df.image_path
 # prefix = 'D:/Predict_Wind/test/'
 
 # ids = [prefix + str(i) + '.jpg' for i in ids]
-batch_size = 256
+batch_size = 150
 
 _, transform = get_transform(366)
 
@@ -50,13 +50,14 @@ test_loader = DataLoader(
 
 warm_up = True
 train_mode = False
-exp = True
-NAME = 'EffB5_exp_55'
-weights_path = './weights/EffiNetB5_exp/epoch55.pth'
+exp = False
+NAME = 'EffB7_fold5'
+weights_path = './weights/EffiNetB7_fold/fold5/epoch32.pth'
 # model = ResNetFromExample()
 # model = Seresnet_Wind(type = 1, pretrained= True, gray = False)
 # model = Seresnext_Wind_Exp()
-model = Effnet_Wind_B5_exp()
+# model = Effnet_Wind_B5_exp()
+model = Effnet_Wind_B7()
 # model = ResNet50_BN_idea()
 # model.load_state_dict(torch.load(weights_path))
 checkpoint = torch.load(weights_path)
