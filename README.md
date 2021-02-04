@@ -15,7 +15,8 @@ Fig 1. Some samples from data.
 
 * The challenge provides a set of $366\times366$ resolution images of the storm was captured by satellie (provided by NASA if I am correct) from two different Ocean. Besides that, they give us the metadata which contain the ocean each image belong to and the time they captured it. Figure 1 shows some examples. The metadata is clean, there is no missing information.
 * They required the participants to predict the speed of the wind and the evaluation metric will be Root Mean Square Error. Call the ground truth is $\hat{y_i}$ and the regression result from our model is $y_i$, the formula will be:
-$$RMSE=\sqrt{\frac{1}{N}\sum^N_{i=0}(y_i-\hat{y_i})^2}$$
+
+$$RMSE=\sqrt{\frac{1}{N}\sum^N_{i=0}(y_i-\hat{y_i})^2} \text{[1]}$$ 
 
 <center>
 <img src="./image/defect_samples.png" alt="image" width="500">
@@ -49,4 +50,24 @@ For both training and evaluation, I use these augments:
 
 ### My solution
 
-At 
+1. The simplest way is transfer learning which means I take a model and the pretrained from ImageNet and replace the last layer to be adapted with my problem. At first, I tried to add several Dense layers with Dropout and activate function (LeakyReLU or Swish), after researched some first ranked solution from Kaggle, I decided to use only one Dense layer to get the final output.
+
+Model for first solution:
+
+* ResNet50
+* ResNet101
+* Squeeze ResNext101-32x4d
+* EfficientNet B5
+* EfficientNet B7
+
+2. Next idea, I think about the object detection task which contain the regression part in there. Inspired by YOLO - my favourite object detection model - I defined the anchor and try to predict the exponential scale factor ($t$ parameter in formula below):
+
+$$speed = anchor\times \exp(t)\text{[2]}$$ 
+
+The anchor here I take the mean of all wind speed which equal to $50.344$.
+
+Model for second solution:
+
+* Squeeze ResNext101-32x4d
+
+3. The lowest wind is $15$ and highest is $185$ which means in equation $[2]$,  $t\in [-1.21, 1.30]$. I think it 
