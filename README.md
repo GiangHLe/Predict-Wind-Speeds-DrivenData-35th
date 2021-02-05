@@ -70,4 +70,4 @@ Model for second solution:
 
 * Squeeze ResNext101-32x4d
 
-3. The lowest wind is $15$ and highest is $185$ which means in equation $[2]$,  $t\in [-1.21, 1.30]$. I think it 
+3. The lowest wind is $15$ and highest is $185$ which means in equation $[2]$,  $t\in [-1.21, 1.30]$. I think its range is too wide and hard to scale with one anchor only. So I decided to find three clusters which will represent for three common wind speed in different level based on how they find the cluster for bounding box in YOLO (you can find the code in [notebook](./notebook))
