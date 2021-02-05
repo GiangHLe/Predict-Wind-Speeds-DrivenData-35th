@@ -70,4 +70,27 @@ Model for second solution:
 
 * Squeeze ResNext101-32x4d
 
-3. The lowest wind is $15$ and highest is $185$ which means in equation $[2]$,  $t\in [-1.21, 1.30]$. I think its range is too wide and hard to scale with one anchor only. So I decided to find three clusters which will represent for three common wind speed in different level based on how they find the cluster for bounding box in YOLO (you can find the code in [notebook](./notebook))
+3. The lowest wind is $15$ and highest is $185$ which means in equation $[2]$,  $t\in [-1.21, 1.30]$. I think its range is too wide and hard to scale with one anchor only. So I decided to find three clusters $\{30,54,95\}$ which will represent for three common wind speed in different level based on how they find the cluster for bounding box in YOLO (you can find the code in [notebook](./notebook)).
+
+With this solution, the output from model should be a vector with length is 4 for each sample, three to classification which anchor that sample belong to and the final element is the exponential scale factor $t$. For classification, I used cross entropy loss function and mean square error for regression, but the regression loss will be turned off if the classification result is uncorrect.
+
+Model for third solution:
+
+* Squeeze ResNext101-32x4d
+* EfficientNet B5
+  
+4. Same with idea 3, just change the output shape from [1,4] to [1,6] which means I give each anchor a regression factor for more capacity.
+
+Model for fourth solution:
+
+* EfficientNet B5
+
+5. Cross validation 5-fold, devide by simple way with scikit-learn.
+
+Model for fifth solution:
+
+* EfficientNet B7
+
+I was looking forward to a good result from 3th and 4th solutions. However, the best solution came from the 5th. I saw the way some teams got high ranking in the Kaggle competition, by combining several models which are trained with 5-fold cross-validation, they could achieve very good performance by taking the average of the result from a hundred models. 
+
+I do not have enough resources to play like that, so I hope to create a breakthrough idea that can achieve a good result with as little computation as possible. I still believe in 4th solution and maybe my code was wrong in somewhere (in loss function part I think), I will comeback and take a look when I have more time.
