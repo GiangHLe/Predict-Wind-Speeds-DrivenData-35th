@@ -28,10 +28,7 @@ class JointLoss(nn.Module):
         pred = torch.argmax(classify, dim = 1).to(y_class.device)
         mask = (pred==y_class).flatten()
         classify_loss = self.ce(classify, y_class) # add coordinate, since the classification part is the key of this method
-        # regression[torch.logical_not(mask)] = 0.0
-        # y_reg[torch.logical_not(mask)] = 0.0
         regression_loss = self.mse(regression[mask].squeeze(), y_reg[mask]) # wrong shape, serious bug
-        # regression_loss = self.mse(regression, y_reg)
         total_loss = classify_loss + regression_loss
         return [
             total_loss, 

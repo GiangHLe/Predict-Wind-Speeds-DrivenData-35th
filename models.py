@@ -137,15 +137,6 @@ class Seresnext_Wind_Exp_anchor(nn.Module):
             nn.Conv2d(128, 4, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0), bias=True),
         )
         self.avg_pool = nn.AdaptiveAvgPool2d((1,1))
-        self.head = nn.Sequential(
-            nn.Conv2d(2048, 64, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0), bias=False),
-            Swish_Module(),
-            nn.BatchNorm1d(512),
-            nn.Dropout(p = 0.2),
-            nn.Linear(512, 128, bias= False),
-            nn.Dropout(p = 0.2),
-            nn.Linear(128, 1)
-        )
 
     def forward(self, x):
         x = self.extract(x)
