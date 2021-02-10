@@ -1,8 +1,0 @@
-tqdm
-opencv-python==4.0.1.23
-numpy
-pandas
-albumentations
-torch>=1.6.0
-torch_optimizer
-pretrainedmodels
