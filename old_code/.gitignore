@@ -1,0 +1,10 @@
+*.weights
+*.h5
+*.pth
+*.pt
+*_test.py
+*.ckpt.data-00000-of-00001
+
+*.jpg
+*.JPG
+

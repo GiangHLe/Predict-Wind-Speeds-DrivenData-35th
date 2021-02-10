@@ -1,0 +1,205 @@
+Epoch: 1
+Training loss: 0.2150
+RMSE val: 8.5362
+Epoch: 2
+Training loss: 0.1545
+RMSE val: 8.6665
+Epoch: 3
+Training loss: 0.1116
+RMSE val: 8.0119
+Epoch: 4
+Training loss: 0.0884
+RMSE val: 7.9761
+Epoch: 5
+Training loss: 0.0761
+RMSE val: 8.0585
+Epoch: 6
+Training loss: 0.0675
+RMSE val: 7.7950
+Epoch: 7
+Training loss: 0.0636
+RMSE val: 8.1223
+Epoch: 8
+Training loss: 0.0617
+RMSE val: 7.7477
+Epoch: 9
+Training loss: 0.0606
+RMSE val: 7.5637
+Epoch: 10
+Training loss: 0.0597
+RMSE val: 7.6276
+Epoch: 11
+Training loss: 0.0588
+RMSE val: 7.6065
+Epoch: 12
+Training loss: 0.0588
+RMSE val: 7.6063
+Epoch: 13
+Training loss: 0.0586
+RMSE val: 7.9053
+Epoch: 14
+Training loss: 0.0581
+RMSE val: 7.4484
+Epoch: 15
+Training loss: 0.0581
+RMSE val: 8.0723
+Epoch: 16
+Training loss: 0.0576
+RMSE val: 8.0551
+Epoch: 17
+Training loss: 0.0578
+RMSE val: 7.8689
+Epoch: 18
+Training loss: 0.0577
+RMSE val: 7.5811
+Epoch: 19
+Training loss: 0.0584
+RMSE val: 7.5680
+Epoch: 20
+Training loss: 0.0586
+RMSE val: 8.1826
+Epoch: 21
+Training loss: 0.0585
+RMSE val: 7.9509
+Epoch: 22
+Training loss: 0.0586
+RMSE val: 8.1450
+Epoch: 23
+Training loss: 0.0587
+RMSE val: 7.5978
+Epoch: 24
+Training loss: 0.0591
+RMSE val: 7.7189
+Epoch: 25
+Training loss: 0.0602
+RMSE val: 7.7852
+Epoch: 26
+Training loss: 0.0600
+RMSE val: 8.6854
+Epoch: 27
+Training loss: 0.0603
+RMSE val: 7.5816
+Epoch: 28
+Training loss: 0.0608
+RMSE val: 7.6745
+Epoch: 29
+Training loss: 0.0614
+RMSE val: 8.1488
+Epoch: 30
+Training loss: 0.0620
+RMSE val: 9.1375
+Epoch: 31
+Training loss: 0.0628
+RMSE val: 7.9814
+Epoch: 32
+Training loss: 0.0640
+RMSE val: 9.0646
+Epoch: 33
+Training loss: 0.0649
+RMSE val: 7.7976
+Epoch: 34
+Training loss: 0.0671
+RMSE val: 8.3879
+Epoch: 35
+Training loss: 0.0668
+RMSE val: 8.0160
+Epoch: 36
+Training loss: 0.0676
+RMSE val: 8.1251
+Epoch: 37
+Training loss: 0.0658
+RMSE val: 7.9399
+Epoch: 38
+Training loss: 0.0702
+RMSE val: 9.0123
+Epoch: 39
+Training loss: 0.0728
+RMSE val: 9.6982
+Epoch: 40
+Training loss: 0.0735
+RMSE val: 8.7817
+Epoch: 41
+Training loss: 0.0728
+RMSE val: 9.3089
+Epoch: 42
+Training loss: 0.0692
+RMSE val: 8.0509
+Epoch: 43
+Training loss: 0.0683
+RMSE val: 8.1907
+Epoch: 44
+Training loss: 0.0771
+RMSE val: 8.0655
+Epoch: 45
+Training loss: 0.0725
+RMSE val: 9.4764
+Epoch: 46
+Training loss: 0.0720
+RMSE val: 10.5186
+Epoch: 47
+Training loss: 0.0740
+RMSE val: 8.8385
+Epoch: 48
+Training loss: 0.0718
+RMSE val: 9.0023
+Epoch: 49
+Training loss: 0.0768
+RMSE val: 8.9036
+Epoch: 50
+Training loss: 0.0735
+RMSE val: 8.3116
+Epoch: 51
+Training loss: 0.0737
+RMSE val: 8.5118
+Epoch: 52
+Training loss: 0.0787
+RMSE val: 10.3599
+Epoch: 53
+Training loss: 0.0781
+RMSE val: 9.0122
+Epoch: 54
+Training loss: 0.0728
+RMSE val: 8.9247
+Epoch: 55
+Training loss: 0.0758
+RMSE val: 9.7439
+Epoch: 56
+Training loss: 0.0744
+RMSE val: 8.6327
+Epoch: 57
+Training loss: 0.0727
+RMSE val: 9.2466
+Epoch: 58
+Training loss: 0.0774
+RMSE val: 8.6657
+Epoch: 59
+Training loss: 0.0787
+RMSE val: 8.9188
+Epoch: 60
+Training loss: 0.0728
+RMSE val: 8.9178
+Epoch: 61
+Training loss: 0.0778
+RMSE val: 8.1761
+Epoch: 62
+Training loss: 0.0780
+RMSE val: 10.8768
+Epoch: 63
+Training loss: 0.0747
+RMSE val: 12.1254
+Epoch: 64
+Training loss: 0.0743
+RMSE val: 9.2593
+Epoch: 65
+Training loss: 0.0767
+RMSE val: 8.6414
+Epoch: 66
+Training loss: 0.0746
+RMSE val: 8.7517
+Epoch: 67
+Training loss: 0.0769
+RMSE val: 8.6899
+Epoch: 68
+Training loss: 0.0803
+RMSE val: 10.8693
+Epoch: 69
